@@ -9,22 +9,14 @@ const Login = () => {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const { login, role } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  // If already logged in, redirect
-  React.useEffect(() => {
-    if (role) {
-      if (role === 'student') navigate('/student/dashboard');
-      else if (role === 'counselor') navigate('/counselor/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
-    }
-  }, [role, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!email || !password) {
-      setError("Please fill in all fields");
+      setError('Please fill in all fields');
       return;
     }
 
@@ -34,16 +26,25 @@ const Login = () => {
     const result = await login(email, password);
     setSubmitting(false);
 
-    if (result.success) {
-      // Navigation handled by useEffect or explicit navigation here if needed, 
-      // but usually useEffect on role change is safer or we check role from result if returned
-      // AuthProvider sets state, useEffect picks it up. 
-      // But to be immediate:
-      // We can't easily get role immediately from context update in same tick.
-      // So relying on useEffect is fine, usually fast enough.
-    } else {
+    if (!result.success) {
       setError(result.message);
+      return;
     }
+
+    // ✅ Explicit redirect ONCE after successful login
+    const role = result.role || result.user?.role;
+
+    if (role === 'Student') {
+      navigate('/student/dashboard', { replace: true });
+    } else if (role === 'Counselor') {
+      navigate('/counselor/dashboard', { replace: true });
+    } else if (role === 'Admin') {
+      navigate('/admin/dashboard', { replace: true });
+    } else {
+      // Fallback: stay on login with error
+      setError('Unable to determine user role');
+    }
+
   };
 
   return (
@@ -63,64 +64,49 @@ const Login = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
           <form className="space-y-6" onSubmit={handleSubmit}>
-
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span className="block sm:inline">{error}</span>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                </div>
+              <div className="mt-1 relative">
+                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 <input
-                  id="email"
-                  name="email"
                   type="email"
-                  autoComplete="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                  className="pl-10 block w-full border rounded-md py-2"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                </div>
+              <div className="mt-1 relative">
+                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 <input
-                  id="password"
-                  name="password"
                   type="password"
-                  autoComplete="current-password"
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                  className="pl-10 block w-full border rounded-md py-2"
                 />
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors"
-              >
-                {submitting ? <Loader2 className="animate-spin h-5 w-5" /> : 'Sign in'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-2 px-4 rounded-md bg-emerald-600 text-white"
+            >
+              {submitting ? <Loader2 className="animate-spin mx-auto" /> : 'Sign in'}
+            </button>
           </form>
         </div>
       </div>

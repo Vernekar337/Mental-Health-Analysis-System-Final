@@ -3,87 +3,104 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+const JWT_KEY =
+  import.meta.env.VITE_JWT_STORAGE_KEY || 'mental_health_jwt';
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Bootstrap auth state from localStorage ONLY.
+   * Do NOT call /auth/me unless backend guarantees it.
+   */
   useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem(import.meta.env.VITE_JWT_STORAGE_KEY || 'mental_health_jwt');
-      if (token) {
-        try {
-          const response = await api.get('/auth/me'); // Assuming /auth/me returns user profile
-          if (response.data) {
-            setUser(response.data.user); // Adjust based on actual backend response structure
-            setRole(response.data.user.role || response.data.role);
-          }
-        } catch (error) {
-          console.error("Failed to fetch user profile", error);
-          // If 401, interceptor handles redirect, but we ensures state is cleared
-          if (error.response && error.response.status !== 401) {
-            // For other errors, maybe keep the user or logout?
-            // Safest to logout on auth failure
-            setUser(null);
-            setRole(null);
-            localStorage.removeItem(import.meta.env.VITE_JWT_STORAGE_KEY || 'mental_health_jwt');
-          }
-        }
-      }
-      setLoading(false);
-    };
+    const token = localStorage.getItem(JWT_KEY);
 
-    fetchUser();
+    if (token) {
+      // Token exists → assume logged in
+      // User will be refreshed naturally by API calls
+      setLoading(false);
+    } else {
+      setUser(null);
+      setRole(null);
+      setLoading(false);
+    }
   }, []);
 
+  /**
+   * Login
+   */
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, user: userData } = response.data;
 
-      localStorage.setItem(import.meta.env.VITE_JWT_STORAGE_KEY || 'mental_health_jwt', token);
+      const {
+        token,
+        _id,
+        name,
+        email: userEmail,
+        role,
+      } = response.data;
+
+      const userData = {
+        _id,
+        name,
+        email: userEmail,
+        role,
+      };
+
+      localStorage.setItem(JWT_KEY, token);
       setUser(userData);
-      setRole(userData.role);
-      return { success: true };
+      setRole(role);
+
+      return { success: true, role };
     } catch (error) {
-      console.error("Login failed", error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed'
+        message: error.response?.data?.message || 'Login failed',
       };
     }
   };
 
+  /**
+   * Register (NO auto-login unless backend explicitly returns token)
+   */
   const register = async (userData) => {
     try {
-      const response = await api.post('/auth/register', userData);
-      // Depending on backend, might return token or just success
-      // If returns token, auto login
-      if (response.data.token) {
-        localStorage.setItem(import.meta.env.VITE_JWT_STORAGE_KEY || 'mental_health_jwt', response.data.token);
-        setUser(response.data.user);
-        setRole(response.data.user.role);
-      }
+      await api.post('/auth/register', userData);
       return { success: true };
     } catch (error) {
-      console.error("Registration failed", error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Registration failed'
+        message: error.response?.data?.message || 'Registration failed',
       };
     }
   };
 
+  /**
+   * Logout
+   */
   const logout = () => {
-    localStorage.removeItem(import.meta.env.VITE_JWT_STORAGE_KEY || 'mental_health_jwt');
+    localStorage.removeItem(JWT_KEY);
     setUser(null);
     setRole(null);
     window.location.href = '/login';
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, login, register, logout }}>
-      {children}
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        loading,
+        login,
+        register,
+        logout,
+      }}
+    >
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

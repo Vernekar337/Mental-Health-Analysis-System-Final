@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../services/api';
-import { Loader2, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Loader2, TrendingUp, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
+
 import ExplainabilityPanel from '../../components/ExplainabilityPanel';
 import LoadingBoundary from '../../components/LoadingBoundary';
 
@@ -21,7 +22,7 @@ const StudentDashboard = () => {
         // POST /api/assessments, GET /api/assessments/history
         // Dashboard needs charts. So we fetch history.
         const response = await api.get('/assessments/history');
-        setData(response.data);
+        setData(response.data.data);
       } catch (err) {
         console.error("Dashboard fetch error", err);
         setError("Failed to load dashboard data.");
@@ -180,7 +181,10 @@ const StudentDashboard = () => {
       </div>
 
       {/* Explainability Panel */}
-      <ExplainabilityPanel insights={insights} />
+      {insights.length > 0 && (
+        <ExplainabilityPanel insights={insights} />
+      )}
+
 
     </div>
   );

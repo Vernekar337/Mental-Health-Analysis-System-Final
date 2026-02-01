@@ -1,27 +1,19 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2 } from 'lucide-react';
 
-const ProtectedRoute = ({ allowedRoles = [] }) => {
+const ProtectedRoute = ({ allowedRoles }) => {
   const { user, role, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="animate-spin h-10 w-10 text-emerald-600" />
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
-  // Not logged in
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Role-based restriction
-  if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
-    // Redirect to correct dashboard based on ACTUAL role values
+  if (allowedRoles && !allowedRoles.includes(role)) {
     switch (role) {
       case 'Student':
         return <Navigate to="/student/dashboard" replace />;

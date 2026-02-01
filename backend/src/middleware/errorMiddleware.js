@@ -1,13 +1,40 @@
 const errorHandler = (err, req, res, next) => {
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  // Determine status code
+  const statusCode = err.statusCode ? err.statusCode : 500;
+
+  // Default response
+  let message = err.message || 'Internal Server Error';
+  let errorCode = err.errorCode || 'SERVER_ERROR';
+
+  // Mongoose invalid ObjectId
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    message = 'Resource not found';
+    errorCode = 'RESOURCE_NOT_FOUND';
+    res.status(404);
+  }
+  // Mongoose validation error
+  else if (err.name === 'ValidationError') {
+    message = Object.values(err.errors)
+      .map((val) => val.message)
+      .join(', ');
+    errorCode = 'VALIDATION_ERROR';
+    res.status(400);
+  } else {
     res.status(statusCode);
+  }
 
-    console.error(err.stack);
+  const response = {
+    success: false,
+    message,
+    errorCode,
+  };
 
-    res.json({
-        message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-    });
+  // Include stack trace only in non-production
+  if (process.env.NODE_ENV !== 'production') {
+    response.stack = err.stack;
+  }
+
+  res.json(response);
 };
 
 module.exports = { errorHandler };
