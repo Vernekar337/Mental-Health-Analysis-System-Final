@@ -1,39 +1,21 @@
 import React from 'react';
-import { AlertCircle, FileText, Mic, Activity } from 'lucide-react';
 
-const ExplainabilityPanel = ({ insights }) => {
-  if (!insights || insights.length === 0) return null;
-
+const ExplainabilityPanel = ({ reasons }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-      <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
-        <Activity className="h-5 w-5 text-emerald-600 mr-2" />
-        Insights Breakdown
-      </h3>
-
-      <div className="space-y-4">
-        {insights.map((insight, index) => (
-          <div key={index} className="flex items-start">
-            <div className="flex-shrink-0">
-              {insight.type === 'assessment' && <FileText className="h-5 w-5 text-blue-500" />}
-              {insight.type === 'audio' && <Mic className="h-5 w-5 text-purple-500" />}
-              {insight.type === 'text' && <FileText className="h-5 w-5 text-gray-500" />}
-              {insight.type === 'general' && <AlertCircle className="h-5 w-5 text-amber-500" />}
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{insight.title}</p>
-              <p className="text-sm text-gray-500">{insight.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4 bg-gray-50 p-4 rounded-md text-xs text-gray-500">
-        <p>
-          <strong>Note:</strong> These insights are generated based on patterns in your submitted data.
-          Use this to reflect on your well-being. This is not a clinical diagnosis.
-        </p>
-      </div>
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 h-full">
+      <h3 className="text-lg font-semibold text-slate-800 mb-4">Analysis Insights</h3>
+      {(!reasons || reasons.length === 0) ? (
+        <p className="text-slate-500 italic">No specific insights available for this period.</p>
+      ) : (
+        <ul className="space-y-3">
+          {reasons.map((reason, index) => (
+            <li key={index} className="flex items-start">
+              <span className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 mt-2 mr-3"></span>
+              <span className="text-slate-600 leading-relaxed">{reason}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

@@ -11,6 +11,9 @@ const journalRoutes = require('./routes/journalRoutes');
 const counselorRoutes = require('./routes/counselorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const mlRoutes = require('./routes/mlRoutes');
+const reportRouter = require('./routes/reportRoutes')
+
+
 
 const app = express();
 
@@ -27,6 +30,7 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/counselor', counselorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/internal/ml', mlRoutes);
+app.use('/api/reports', reportRouter);
 
 // Root route
 app.get('/', (req, res) => {

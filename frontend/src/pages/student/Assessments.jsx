@@ -1,167 +1,200 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ASSESSMENTS } from '../../util/assessmentData';
+import { ClipboardList, ChevronRight, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 
 const Assessments = () => {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
+  const [selectedAssessment, setSelectedAssessment] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [responses, setResponses] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
-  // Simplified questions for PHQ-9 (Depression) and GAD-7 (Anxiety)
-  // In a real app, these would be fuller lists.
-  const questions = [
-    { id: 'phq1', text: "Little interest or pleasure in doing things?", category: 'phq9' },
-    { id: 'phq2', text: "Feeling down, depressed, or hopeless?", category: 'phq9' },
-    { id: 'gad1', text: "Feeling nervous, anxious, or on edge?", category: 'gad7' },
-    { id: 'gad2', text: "Not being able to stop or control worrying?", category: 'gad7' },
-    // Add more as needed by specs, but keeping it short for this implementation
-  ];
-
-  const handleOptionChange = (questionId, value) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: parseInt(value)
-    }));
+  const handleSelectAssessment = (key) => {
+    setSelectedAssessment(key);
+    setCurrentStep(0);
+    setResponses({});
+    setCompleted(false);
   };
 
-  const calculateScores = () => {
-    let phq9 = 0;
-    let gad7 = 0;
+  const handleOptionSelect = (score) => {
+    setResponses(prev => ({
+      ...prev,
+      [currentStep]: score
+    }));
 
-    questions.forEach(q => {
-      const val = answers[q.id] || 0;
-      if (q.category === 'phq9') phq9 += val;
-      if (q.category === 'gad7') gad7 += val;
-    });
+    // Auto advance after short delay for better UX
+    setTimeout(() => {
+      if (currentStep < ASSESSMENTS[selectedAssessment].questions.length - 1) {
+        setCurrentStep(prev => prev + 1);
+      }
+    }, 200);
+  };
 
-    return { phq9, gad7 };
+  const handleNext = () => {
+    if (currentStep < ASSESSMENTS[selectedAssessment].questions.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-    setError('');
+    setIsSubmitting(true);
 
-    const scores = calculateScores();
+    // Construct Payload
     const payload = {
-      answers,
-      scores,
-      date: new Date().toISOString()
+      assessmentType: selectedAssessment,
+      rawResponses: Object.keys(responses).sort((a, b) => a - b).map(k => responses[k])
     };
 
-    try {
-      await api.post('/assessments', payload);
-      setSuccess(true);
-      // Redirect after short delay
-      setTimeout(() => navigate('/student/dashboard'), 2000);
-    } catch (err) {
-      console.error("Assessment submit error", err);
-      setError("Failed to submit assessment. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
+    console.log("Submitting Payload:", payload);
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    setIsSubmitting(false);
+    setCompleted(true);
   };
 
-  const isStepComplete = () => {
-    // Check if current question is answered
-    // Logic depends on UI flow (one per page or all at once).
-    // Let's do all at once for simplicity as "Wizard" usually implies steps, 
-    // but a single Scrollable form is also fine for 4 questions.
-    // Requirement says "Step-by-step form".
-
-    const currentQ = questions[step];
-    return answers[currentQ.id] !== undefined;
+  const resetSelection = () => {
+    setSelectedAssessment(null);
+    setCompleted(false);
   };
 
-  const nextStep = () => {
-    if (step < questions.length - 1) {
-      setStep(step + 1);
-    } else {
-      handleSubmit();
-    }
-  };
-
-  const prevStep = () => {
-    if (step > 0) setStep(step - 1);
-  };
-
-  if (success) {
+  // --- RENDER: Selection View ---
+  if (!selectedAssessment) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <CheckCircle className="h-16 w-16 text-emerald-500 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900">Assessment Submitted!</h2>
-        <p className="text-gray-500">Redirecting to dashboard...</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Mental Health Assessments</h1>
+          <p className="text-slate-500 mt-1">Select an assessment to begin. Your responses are confidential.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(ASSESSMENTS).map(([key, data]) => (
+            <div key={key} className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group" onClick={() => handleSelectAssessment(key)}>
+              <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-lg ${key === 'PHQ-9' || key === 'GAD-7' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 border border-slate-200 px-2 py-1 rounded">{data.frequency}</span>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-emerald-700 transition-colors">{data.title}</h3>
+              <p className="text-slate-600 mb-4">{data.description}</p>
+              <div className="flex items-center text-emerald-600 font-medium text-sm">
+                Start Assessment <ChevronRight className="w-4 h-4 ml-1" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-xl mx-auto py-8">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Mental Health Assessment</h2>
-        <p className="text-gray-500 text-sm mt-2">
-          Please answer the following questions based on how you have been feeling over the last 2 weeks.
-        </p>
-        <div className="mt-4 bg-gray-200 rounded-full h-2.5">
-          <div className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${((step + 1) / questions.length) * 100}%` }}></div>
+  // --- RENDER: Success View ---
+  if (completed) {
+    return (
+      <div className="max-w-2xl mx-auto text-center py-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mb-6">
+          <CheckCircle className="w-8 h-8" />
         </div>
-        <p className="text-right text-xs text-gray-400 mt-1">Question {step + 1} of {questions.length}</p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Assessment Submitted</h2>
+        <p className="text-slate-600 mb-8">Thank you for completing the check-in. Your responses have been securely recorded.</p>
+        <button onClick={resetSelection} className="bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition-colors">
+          Return to Assessments
+        </button>
       </div>
+    );
+  }
 
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-xl font-medium text-gray-900 mb-6 min-h-[3rem]">
-          {questions[step].text}
-        </h3>
+  // --- RENDER: Taking Assessment View ---
+  const data = ASSESSMENTS[selectedAssessment];
+  const totalQuestions = data.questions.length;
+  const progress = ((currentStep + 1) / totalQuestions) * 100;
+  const isLastQuestion = currentStep === totalQuestions - 1;
+  const canSubmit = isLastQuestion && responses[currentStep] !== undefined;
 
-        <div className="space-y-4">
-          {[
-            { val: 0, label: "Not at all" },
-            { val: 1, label: "Several days" },
-            { val: 2, label: "More than half the days" },
-            { val: 3, label: "Nearly every day" }
-          ].map((opt) => (
-            <button
-              key={opt.val}
-              type="button"
-              onClick={() => handleOptionChange(questions[step].id, opt.val)}
-              className={`w-full text-left px-4 py-3 border rounded-md transition-colors ${answers[questions[step].id] === opt.val
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-medium ring-1 ring-emerald-500'
-                  : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+  return (
+    <div className="max-w-3xl mx-auto">
+      <button onClick={resetSelection} className="flex items-center text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Selection
+      </button>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Progress Bar */}
+        <div className="h-2 bg-slate-100 w-full">
+          <div className="h-full bg-emerald-500 transition-all duration-300 ease-out" style={{ width: `${progress}%` }}></div>
         </div>
 
-        {error && (
-          <div className="mt-4 flex items-center text-red-600">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            <span className="text-sm">{error}</span>
+        <div className="p-8 md:p-12">
+          <div className="mb-8">
+            <span className="text-emerald-600 font-semibold tracking-wide text-sm uppercase mb-2 block">{data.title}</span>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight mb-4">
+              {data.questions[currentStep]}
+            </h2>
+            <p className="text-slate-500 italic border-l-4 border-slate-200 pl-4 py-1">
+              {data.instructions}
+            </p>
           </div>
-        )}
 
-        <div className="mt-8 flex justify-between">
-          <button
-            type="button"
-            onClick={prevStep}
-            disabled={step === 0 || submitting}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={nextStep}
-            disabled={answers[questions[step].id] === undefined || submitting}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50"
-          >
-            {submitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
-            {step === questions.length - 1 ? 'Submit' : 'Next'}
-          </button>
+          <div className="space-y-3">
+            {data.options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleOptionSelect(option.value)}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 flex items-center justify-between group ${responses[currentStep] === option.value
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                    : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700'
+                  }`}
+              >
+                <span className="font-medium text-lg">{option.label}</span>
+                {responses[currentStep] === option.value && <CheckCircle className="w-5 h-5 text-emerald-600" />}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex justify-between items-center mt-10 pt-6 border-t border-slate-100">
+            <button
+              onClick={handleBack}
+              disabled={currentStep === 0}
+              className={`px-4 py-2 rounded text-slate-500 font-medium ${currentStep === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-100 hover:text-slate-800'}`}
+            >
+              Previous
+            </button>
+
+            <div className="text-slate-400 text-sm font-medium">
+              Question {currentStep + 1} of {totalQuestions}
+            </div>
+
+            {isLastQuestion ? (
+              <button
+                onClick={handleSubmit}
+                disabled={responses[currentStep] === undefined || isSubmitting}
+                className={`px-6 py-2 rounded-lg font-bold text-white transition-all ${responses[currentStep] === undefined || isSubmitting
+                    ? 'bg-slate-300 cursor-not-allowed'
+                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5'
+                  }`}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Assessment'}
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                disabled={responses[currentStep] === undefined}
+                className={`flex items-center px-6 py-2 rounded-lg font-medium transition-all ${responses[currentStep] === undefined
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-slate-900 text-white hover:bg-slate-800'
+                  }`}
+              >
+                Next <ChevronRight className="w-4 h-4 ml-2" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
