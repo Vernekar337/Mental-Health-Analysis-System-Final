@@ -1,6 +1,6 @@
 const MoodEntry = require("../models/MoodEntry")
 
-// POST /api/mood
+
 exports.createMoodEntry = async (req, res) => {
   const { moodScore, moodLabel, note, date } = req.body
 
@@ -19,7 +19,7 @@ exports.createMoodEntry = async (req, res) => {
   res.status(201).json(mood)
 }
 
-// GET /api/mood
+
 exports.getMoodEntries = async (req, res) => {
   const moods = await MoodEntry.find({ userId: req.user._id })
     .sort({ date: -1 })
@@ -27,7 +27,7 @@ exports.getMoodEntries = async (req, res) => {
   res.json(moods)
 }
 
-// GET /api/mood/range?from=&to=
+
 exports.getMoodByDateRange = async (req, res) => {
   const { from, to } = req.query
 
