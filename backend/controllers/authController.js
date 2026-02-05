@@ -1,52 +1,51 @@
+const bcrypt = require("bcryptjs")
 const User = require("../models/User")
-const { hashPassword, comparePassword } = require("../utils/hashPassword")
-const generateToken = require("../utils/generateToken")
+const { generateToken } = require("./jwt")
 
-exports.registerUser = async (req, res) => {
-  const { name, email, password } = req.body
+// POST /api/auth/register
+const register = async (req, res) => {
+  const { name, email, password, role, age } = req.body
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "All fields required" })
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields"
+    })
+  }
+
+  const allowedRoles = ["student", "parent", "counselor"]
+
+  if (!allowedRoles.includes(role)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid role"
+    })
   }
 
   const existingUser = await User.findOne({ email })
   if (existingUser) {
-    return res.status(400).json({ message: "User already exists" })
+    return res.status(400).json({
+      success: false,
+      message: "User already exists"
+    })
   }
+
+  const passwordHash = await bcrypt.hash(password, 10)
 
   const user = await User.create({
     name,
     email,
-    password: await hashPassword(password)
+    passwordHash,
+    role,
+    age
   })
+
+  const token = generateToken(user._id)
 
   res.status(201).json({
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      onboardingCompleted: user.onboardingCompleted
-    },
-    token: generateToken(user._id)
+    success: true,
+    token
   })
 }
 
-exports.loginUser = async (req, res) => {
-  const { email, password } = req.body
-
-  const user = await User.findOne({ email }).select("+password")
-
-  if (!user || !(await comparePassword(password, user.password))) {
-    return res.status(401).json({ message: "Invalid credentials" })
-  }
-
-  res.json({
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      onboardingCompleted: user.onboardingCompleted
-    },
-    token: generateToken(user._id)
-  })
-}
+module.exports = { login, register }

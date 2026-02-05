@@ -1,43 +1,49 @@
-const AssessmentResponse = require("../models/AssessmentResponse")
-const { scoreAssessment } = require("../utils/assessmentScoring")
+const Assessment = require("../models/Assessment")
+const AnalysisResult = require("../models/AnalysisResult")
+const { computeScores } = require("../services/scoringService")
+const { generateAnalysis } = require("../services/analysisService")
+const { evaluateAlerts } = require("../services/alertService")
 
+// POST /api/assessments
+const createAssessment = async (req, res) => {
+  const { assessmentType, rawResponses } = req.body
 
-exports.submitAssessment = async (req, res) => {
-  const { assessmentType, responses, date } = req.body
-
-  if (!assessmentType || !responses || !date) {
+  if (!assessmentType || !rawResponses) {
     return res.status(400).json({
-      message: "assessmentType, responses and date are required"
+      success: false,
+      message: "Missing assessment data"
     })
   }
 
-  try {
-    const { totalScore, severity } = scoreAssessment(
-      assessmentType,
-      responses
-    )
+  const { computedScores, severityLevel } =
+    computeScores(assessmentType, rawResponses)
 
-    const assessment = await AssessmentResponse.create({
-      userId: req.user._id,
-      assessmentType,
-      responses,
-      totalScore,
-      severity,
-      date
-    })
-
-    res.status(201).json(assessment)
-  } catch (err) {
-    res.status(400).json({ message: err.message })
-  }
-}
-
-
-exports.getAssessmentsByType = async (req, res) => {
-  const assessments = await AssessmentResponse.find({
+  const assessment = await Assessment.create({
     userId: req.user._id,
-    assessmentType: req.params.type
-  }).sort({ date: -1 })
+    assessmentType,
+    rawResponses,
+    computedScores,
+    severityLevel
+  })
 
-  res.json(assessments)
+  const analysisPayload = generateAnalysis(
+    assessment,
+    severityLevel
+  )
+
+  const analysis = await AnalysisResult.create({
+    userId: req.user._id,
+    assessmentId: assessment._id,
+    ...analysisPayload
+  })
+
+  await evaluateAlerts(req.user, severityLevel)
+
+  res.status(201).json({
+    success: true,
+    assessmentId: assessment._id,
+    analysisId: analysis._id
+  })
 }
+
+module.exports = { createAssessment }

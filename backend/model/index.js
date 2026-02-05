@@ -1,7 +1,9 @@
 module.exports = {
   User: require("./User"),
-  MoodEntry: require("./MoodEntry"),
-  JournalEntry: require("./JournalEntry"),
-  ActivityLog: require("./ActivityLog"),
-  AssessmentResponse: require("./AssessmentResponse")
+  Assessment: require("./Assessment"),
+  AnalysisResult: require("./AnalysisResult"),
+  ReflectiveAssessment: require("./ReflectiveAssessment"),
+  CaseFile: require("./CaseFile"),
+  Alert: require("./Alert"),
+  RelaxRoom: require("./RelaxRoom")
 }

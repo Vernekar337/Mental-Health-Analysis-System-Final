@@ -4,34 +4,36 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
-      trim: true
+      required: true
     },
 
     email: {
       type: String,
       required: true,
-      unique: true,
-      lowercase: true,
-      index: true
+      unique: true
     },
 
-    password: {
+    passwordHash: {
       type: String,
-      required: true,
-      select: false
+      required: true
     },
 
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user"
+      enum: ["student", "counselor", "parent", "admin"],
+      required: true
     },
 
-    onboardingCompleted: {
-      type: Boolean,
-      default: false
-    }
+    age: {
+      type: Number
+    },
+
+    linkedStudentIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ]
   },
   { timestamps: true }
 )

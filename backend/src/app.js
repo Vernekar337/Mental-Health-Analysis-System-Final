@@ -7,7 +7,23 @@ const journalRouter = require("./routes/journalRoutes")
 const activityRouter = require("./routes/activityRoutes")
 const assessmentRoutes = require("./routes/assessmentRoutes")
 const analyticsRoutes = require("./routes/analyticsRoutes")
+const reportRoutes = require("./routes/reportRoutes")
+const reflectiveAssessmentRoutes = require("./routes/reflectiveAssessmentRoutes")
+const alertRoutes = require("./routes/alertRoutes")
+const counselorRoutes = require("./routes/counselorRoutes")
+const relaxRoomRoutes = require("./routes/relaxRoomRoutes")
 
+
+const http = require("http")
+const { Server } = require("socket.io")
+const relaxRoomSocket = require("./sockets/relaxRoomSocket")
+
+const server = http.createServer(app)
+const io = new Server(server, {
+  cors: { origin: "*" }
+})
+
+relaxRoomSocket(io)
 
 const app = express();
 
@@ -20,6 +36,14 @@ app.use("/api/journal",journalRouter )
 app.use("/api/activity", activityRouter)
 app.use("/api/assessment", assessmentRoutes )
 app.use("/api/analytics", analyticsRoutes)
+app.use("/api/reports", reportRoutes)
+app.use(
+  "/api/reflective-assessments",
+  reflectiveAssessmentRoutes)
+app.use("/api/alerts", alertRoutes)
+app.use("/api/counselor", counselorRoutes)
+app.use("/api/relax-rooms", relaxRoomRoutes)
+
 
 
 
