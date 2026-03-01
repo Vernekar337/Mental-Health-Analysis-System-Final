@@ -1,29 +1,34 @@
 const express = require('express');
 const cors = require('cors');
 
-const authRouter = require("./routes/authRoutes")
-const moodRouter = require("./routes/moodRoutes")
-const journalRouter = require("./routes/journalRoutes")
-const activityRouter = require("./routes/activityRoutes")
-const assessmentRoutes = require("./routes/assessmentRoutes")
-const analyticsRoutes = require("./routes/analyticsRoutes")
-const reportRoutes = require("./routes/reportRoutes")
-const reflectiveAssessmentRoutes = require("./routes/reflectiveAssessmentRoutes")
-const alertRoutes = require("./routes/alertRoutes")
-const counselorRoutes = require("./routes/counselorRoutes")
-const relaxRoomRoutes = require("./routes/relaxRoomRoutes")
+const authRouter = require("../routes/authRoutes")
+// const moodRouter = require("../routes/moodRoutes")
+// const journalRouter = require("../routes/journalRoutes")
+// const activityRouter = require("../routes/activityRoutes")
+const assessmentRoutes = require("../routes/assessmentRoutes")
+// const analyticsRoutes = require("../routes/analyticsRoutes")
+const reportRoutes = require("../routes/reportRoutes")
+// const reflectiveAssessmentRoutes = require("../routes/reflectiveAssessmentRoutes")
+// const alertRoutes = require("../routes/alertRoutes")
+// const counselorRoutes = require("../routes/counselorRoutes")
+// const relaxRoomRoutes = require("../routes/relaxRoomRoutes")
+const dashboardRoutes = require("../routes/dashboardRoutes")
+const insightRoutes = require("../routes/insightRoutes")
+
+
+
 
 
 const http = require("http")
-const { Server } = require("socket.io")
-const relaxRoomSocket = require("./sockets/relaxRoomSocket")
+// const { Server } = require("socket.io")
+// const relaxRoomSocket = require("./sockets/relaxRoomSocket")
 
-const server = http.createServer(app)
-const io = new Server(server, {
-  cors: { origin: "*" }
-})
+// const server = http.createServer(app)
+// const io = new Server(server, {
+//   cors: { origin: "*" }
+// })
 
-relaxRoomSocket(io)
+// relaxRoomSocket(io)
 
 const app = express();
 
@@ -31,18 +36,20 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRouter )
-app.use("/api/mood", moodRouter )
-app.use("/api/journal",journalRouter )
-app.use("/api/activity", activityRouter)
+// app.use("/api/mood", moodRouter )
+// app.use("/api/journal",journalRouter )
+// app.use("/api/activity", activityRouter)
 app.use("/api/assessment", assessmentRoutes )
-app.use("/api/analytics", analyticsRoutes)
-app.use("/api/reports", reportRoutes)
-app.use(
-  "/api/reflective-assessments",
-  reflectiveAssessmentRoutes)
-app.use("/api/alerts", alertRoutes)
-app.use("/api/counselor", counselorRoutes)
-app.use("/api/relax-rooms", relaxRoomRoutes)
+// app.use("/api/analytics", analyticsRoutes)
+app.use("/api/report", reportRoutes)
+// app.use(
+//   "/api/reflective-assessments",
+//   reflectiveAssessmentRoutes)
+// app.use("/api/alerts", alertRoutes)
+// app.use("/api/counselor", counselorRoutes)
+// app.use("/api/relax-rooms", relaxRoomRoutes)
+app.use("/api/dashboard", dashboardRoutes)
+app.use("/api/insights", insightRoutes)
 
 
 

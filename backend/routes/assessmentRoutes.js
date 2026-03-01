@@ -1,14 +1,9 @@
 const express = require("express")
-const { getStudentReport } = require("../controllers/reportController")
+const { createAssessment } = require("../controllers/assessmentController")
 const { protect, authorize } = require("../auth/authMiddleware")
 
 const router = express.Router()
 
-router.get(
-  "/student",
-  protect,
-  authorize(["student"]),
-  getStudentReport
-)
+router.post("/", protect, authorize(["student"]), createAssessment)
 
 module.exports = router

@@ -1,27 +1,19 @@
+const generateInsights = async ({ mhIndex, severity, trend }) => {
+  // For now we MOCK response (fast + safe)
+  
+  if (severity === "Severe") {
+    return "Your recent assessments indicate high distress levels. Consider speaking to a counselor and practicing daily relaxation techniques."
+  }
 
-// Replace implementation with actual Grok 
-const generateReflectiveQuestions = async (reportContext) => {
-  return [
-    {
-      id: "q1",
-      type: "PARAGRAPH",
-      question:
-        "Describe in your own words how you have been feeling over the past two weeks."
-    },
-    {
-      id: "q2",
-      type: "MCQ",
-      question:
-        "Which of the following best describes your recent stress levels?",
-      options: ["Low", "Moderate", "High", "Very High"]
-    },
-    {
-      id: "q3",
-      type: "PARAGRAPH",
-      question:
-        "Are there any recent events that you believe contributed to these feelings?"
-    }
-  ]
+  if (severity === "Moderate") {
+    return "You are showing moderate signs of stress. Try improving sleep, exercise regularly, and talk to someone you trust."
+  }
+
+  if (trend === "worsening") {
+    return "Your mental health trend is declining. It is recommended to seek support and reduce stressors."
+  }
+
+  return "Your mental health looks stable. Continue maintaining healthy habits and self-care."
 }
 
-module.exports = { generateReflectiveQuestions }
+module.exports = { generateInsights }

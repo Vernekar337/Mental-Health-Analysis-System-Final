@@ -1,69 +1,63 @@
-const Assessment = require("../models/Assessment")
 const AnalysisResult = require("../models/AnalysisResult")
-const ReflectiveAssessment = require("../models/ReflectiveAssessment")
-const CaseFile = require("../models/CaseFile")
+const AssessmentResponse = require("../models/AssessmentResponse")
+const User = require("../models/User")
 
+const getLatestReport = async (req, res) => {
+  try {
+    const userId = req.user._id
 
-const getStudentReport = async (req, res) => {
-  
-  const assessment = await Assessment.findOne({
-    userId: req.user._id
-  }).sort({ createdAt: -1 })
+    // student basic info
+    const user = await User.findById(userId).select("name age")
 
-  if (!assessment) {
-    return res.status(404).json({
-      success: false,
-      message: "No assessments found"
+    // latest analysis
+    const analysisRecords = await AnalysisResult.find({ userId })
+      .sort({ createdAt: -1 })
+
+    if (analysisRecords.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No report data found"
+      })
+    }
+
+    const latestAnalysis = analysisRecords[0]
+
+    // all responses
+    const responses = await AssessmentResponse.find({ userId })
+      .sort({ createdAt: -1 })
+
+    const latestResponse = responses[0]
+
+    // compute trend (same logic as dashboard)
+    let trend = "stable"
+    if (analysisRecords.length >= 2) {
+      const last = analysisRecords[0].mhIndex
+      const prev = analysisRecords[1].mhIndex
+
+      if (last > prev) trend = "improving"
+      else if (last < prev) trend = "worsening"
+    }
+
+    // format assessments
+    const formattedAssessments = responses.map(r => ({
+      type: r.assessmentType,
+      score: r.totalScore,
+      severity: r.severity,
+      date: r.createdAt
+    }))
+
+    res.json({
+      student: user,
+      mhIndex: latestAnalysis.mhIndex,
+      severity: latestResponse?.severity || "Unknown",
+      trend,
+      assessments: formattedAssessments,
+      lastUpdated: latestAnalysis.createdAt
     })
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
   }
-
-
-  const analysis = await AnalysisResult.findOne({
-    assessmentId: assessment._id
-  })
-
-  if (!analysis) {
-    return res.status(500).json({
-      success: false,
-      message: "Analysis result missing"
-    })
-  }
-
-  
-  const reflective = await ReflectiveAssessment.findOne({
-    sourceAssessmentId: assessment._id
-  })
-
-
-  const caseFile = await CaseFile.findOne({
-    userId: req.user._id
-  }).sort({ createdAt: -1 })
-
-
-  const report = {
-    summary: {
-      assessmentType: assessment.assessmentType,
-      severityLevel: assessment.severityLevel,
-      mhIndex: analysis.mhIndex,
-      anomalyDetected: analysis.anomalyDetected
-    },
-
-    trends: {
-      predictedTrajectory: analysis.predictedTrajectory,
-      clusterLabel: analysis.clusterLabel
-    },
-
-    explainability: {
-      mhIndexBreakdown: analysis.mhIndexBreakdown,
-      reflectiveAssessmentCompleted: Boolean(reflective)
-    },
-
-    reviewStatus: caseFile
-      ? caseFile.status
-      : "Not Reviewed"
-  }
-
-  res.json(report)
 }
 
-module.exports = { getStudentReport }
+module.exports = { getLatestReport }

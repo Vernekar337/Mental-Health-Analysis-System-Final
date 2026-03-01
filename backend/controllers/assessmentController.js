@@ -5,45 +5,57 @@ const { generateAnalysis } = require("../services/analysisService")
 const { evaluateAlerts } = require("../services/alertService")
 
 // POST /api/assessments
+const AssessmentResponse = require("../models/AssessmentResponse")
+
+
 const createAssessment = async (req, res) => {
-  const { assessmentType, rawResponses } = req.body
+  try {
+    const { assessmentType, responses } = req.body
 
-  if (!assessmentType || !rawResponses) {
-    return res.status(400).json({
-      success: false,
-      message: "Missing assessment data"
+    const { totalScore, severity, mhIndex } =
+      computeScores(assessmentType, responses)
+
+    // Save response
+    const responseDoc = await AssessmentResponse.create({
+      userId: req.user._id,
+      assessmentType,
+      responses,
+      totalScore,
+      severity,
+      date: new Date()
     })
+
+    // Save analysis (for dashboard/report)
+    const analysis = await AnalysisResult.create({
+      userId: req.user._id,
+      assessmentId: responseDoc._id,
+      mhIndex,
+      severity,
+      trend: "stable", // we update later
+      anomalyDetected: false,
+  clusterLabel: "normal",
+  predictedTrajectory: "stable",
+  mhIndexBreakdown: {
+    anxiety: mhIndex,
+    depression: mhIndex,
+    stress: mhIndex
   }
+    })
 
-  const { computedScores, severityLevel } =
-    computeScores(assessmentType, rawResponses)
+    // Alerts
+    await evaluateAlerts(req.user, severity)
 
-  const assessment = await Assessment.create({
-    userId: req.user._id,
-    assessmentType,
-    rawResponses,
-    computedScores,
-    severityLevel
-  })
-
-  const analysisPayload = generateAnalysis(
-    assessment,
-    severityLevel
-  )
-
-  const analysis = await AnalysisResult.create({
-    userId: req.user._id,
-    assessmentId: assessment._id,
-    ...analysisPayload
-  })
-
-  await evaluateAlerts(req.user, severityLevel)
-
-  res.status(201).json({
-    success: true,
-    assessmentId: assessment._id,
-    analysisId: analysis._id
-  })
+    res.status(201).json({
+      success: true,
+      responseId: responseDoc._id,
+      mhIndex,
+      severity
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ success: false, message: err.message })
+  }
 }
 
 module.exports = { createAssessment }
+
