@@ -14,7 +14,8 @@ const reportRoutes = require("../routes/reportRoutes")
 // const relaxRoomRoutes = require("../routes/relaxRoomRoutes")
 const dashboardRoutes = require("../routes/dashboardRoutes")
 const insightRoutes = require("../routes/insightRoutes")
-
+const reflectionRoutes = require("../routes/reflectionRoutes")
+const parentRoutes = require("../routes/parentRoutes")
 
 
 
@@ -50,6 +51,8 @@ app.use("/api/report", reportRoutes)
 // app.use("/api/relax-rooms", relaxRoomRoutes)
 app.use("/api/dashboard", dashboardRoutes)
 app.use("/api/insights", insightRoutes)
+app.use("/api/reflection", reflectionRoutes)
+app.use("/api/parent", parentRoutes)
 
 
 
