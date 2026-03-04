@@ -1,24 +1,33 @@
 const express = require("express")
-const {
-  getPendingCases,
-  approveCase
-} = require("../controllers/counselorController")
-const { protect, authorize } = require("../auth/authMiddleware")
-
 const router = express.Router()
+
+const { getPublicCases } = require("../controllers/counselorController")
+
+const { protect, authorize } = require("../auth/authMiddleware")
+const {
+  writeSuggestion,
+  getStudentSuggestions
+} = require("../controllers/counselorController")
 
 router.get(
   "/cases",
   protect,
   authorize(["counselor"]),
-  getPendingCases
+  getPublicCases
 )
 
 router.post(
-  "/cases/:id/approve",
+  "/suggestion",
   protect,
   authorize(["counselor"]),
-  approveCase
+  writeSuggestion
+)
+
+router.get(
+  "/suggestions",
+  protect,
+  authorize(["student"]),
+  getStudentSuggestions
 )
 
 module.exports = router

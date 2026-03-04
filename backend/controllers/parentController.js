@@ -2,6 +2,8 @@ const AnalysisResult = require("../models/AnalysisResult")
 const AssessmentResponse = require("../models/AssessmentResponse")
 const { generateParentRecommendations } = require("../services/llmService")
 
+const User = require("../models/User")
+
 const getParentRecommendations = async (req, res) => {
   try {
     const { childId } = req.params
@@ -32,4 +34,46 @@ const getParentRecommendations = async (req, res) => {
   }
 }
 
-module.exports = { getParentRecommendations }
+
+const linkChild = async (req, res) => {
+  try {
+    const parentId = req.user._id
+    const { childEmail } = req.body
+
+    const child = await User.findOne({
+      email: childEmail,
+      role: "student"
+    })
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      })
+    }
+
+    // update student
+    child.parentId = parentId
+    await child.save()
+
+    // update parent
+    await User.findByIdAndUpdate(parentId, {
+      $addToSet: { children: child._id }
+    })
+
+    res.json({
+      success: true,
+      message: "Child linked successfully",
+      childId: child._id
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message
+    })
+  }
+}
+
+
+module.exports = { getParentRecommendations, linkChild }

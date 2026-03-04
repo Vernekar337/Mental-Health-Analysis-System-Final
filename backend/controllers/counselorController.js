@@ -1,56 +1,114 @@
-const CaseFile = require("../models/CaseFile")
-const Alert = require("../models/Alert")
 const User = require("../models/User")
+const AnalysisResult = require("../models/AnalysisResult")
+const AssessmentResponse = require("../models/AssessmentResponse")
+const Suggestion = require("../models/Suggestion")
 
-// GET /api/counselor/cases
-const getPendingCases = async (req, res) => {
-  const cases = await CaseFile.find({
-    status: "Pending"
-  })
-    .populate("userId", "name email age")
-    .sort({ createdAt: -1 })
+const getPublicCases = async (req, res) => {
 
-  res.json({
-    data: cases
-  })
-}
+  try {
 
-// POST /api/counselor/cases/:id/approve
-const approveCase = async (req, res) => {
-  const caseFile = await CaseFile.findById(req.params.id)
+    // find all students whose profiles are public
+    const students = await User.find({
+      role: "student",
+      isProfilePublic: true
+    })
 
-  if (!caseFile) {
-    return res.status(404).json({
+    const cases = []
+
+    for (let student of students) {
+
+      const analysis = await AnalysisResult
+        .findOne({ userId: student._id })
+        .sort({ createdAt: -1 })
+
+      const response = await AssessmentResponse
+        .findOne({ userId: student._id })
+        .sort({ createdAt: -1 })
+
+      cases.push({
+
+        studentId: student._id,
+        studentName: student.name,
+
+        mhIndex: analysis ? analysis.mhIndex : null,
+
+        severity: response ? response.severity : "Unknown",
+
+        lastAssessmentDate: response ? response.createdAt : null
+
+      })
+
+    }
+
+    res.json({
+      success: true,
+      cases
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
       success: false,
-      message: "Case not found"
+      message: err.message
     })
+
   }
 
-  caseFile.status = "Approved"
-  caseFile.counselorId = req.user._id
-  await caseFile.save()
+}
 
-  // Notify parents of the student
-  const parents = await User.find({
-    role: "parent",
-    linkedStudentIds: caseFile.userId
-  })
+const writeSuggestion = async (req, res) => {
 
-  for (const parent of parents) {
-    await Alert.create({
-      userId: caseFile.userId,
-      triggeredBy: "Counselor review approved",
-      severity: "Medium",
-      message:
-        "A counselor has reviewed and approved a mental health case for your child.",
-      sentTo: parent.email
+  try {
+
+    const counselorId = req.user._id
+    const { studentId, message } = req.body
+
+    const suggestion = await Suggestion.create({
+      studentId,
+      counselorId,
+      message
     })
+
+    res.json({
+      success: true,
+      suggestion
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    })
+
   }
 
-  res.json({ success: true })
 }
 
-module.exports = {
-  getPendingCases,
-  approveCase
+const getStudentSuggestions = async (req, res) => {
+
+  try {
+
+    const studentId = req.user._id
+
+    const suggestions = await Suggestion
+      .find({ studentId })
+      .populate("counselorId", "name")
+
+    res.json({
+      success: true,
+      suggestions
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    })
+
+  }
+
 }
+
+module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions }

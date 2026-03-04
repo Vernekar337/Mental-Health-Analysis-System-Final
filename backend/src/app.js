@@ -16,6 +16,9 @@ const dashboardRoutes = require("../routes/dashboardRoutes")
 const insightRoutes = require("../routes/insightRoutes")
 const reflectionRoutes = require("../routes/reflectionRoutes")
 const parentRoutes = require("../routes/parentRoutes")
+const audioRoutes = require("../routes/audioRoutes")
+const profileRoutes = require("../routes/profileRoutes")
+const counselorRoutes = require("../routes/counselorRoutes")
 
 
 
@@ -53,6 +56,9 @@ app.use("/api/dashboard", dashboardRoutes)
 app.use("/api/insights", insightRoutes)
 app.use("/api/reflection", reflectionRoutes)
 app.use("/api/parent", parentRoutes)
+app.use("/api/audio", audioRoutes)
+app.use("/api/profile", profileRoutes)
+app.use("/api/counselor", counselorRoutes)
 
 
 

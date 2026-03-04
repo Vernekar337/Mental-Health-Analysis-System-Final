@@ -2,6 +2,10 @@ const mongoose = require("mongoose")
 
 const userSchema = new mongoose.Schema(
   {
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
     name: {
       type: String,
       required: true
@@ -26,6 +30,10 @@ const userSchema = new mongoose.Schema(
 
     age: {
       type: Number
+    },
+    isProfilePublic: {
+      type: Boolean,
+      default: false
     },
 
     linkedStudentIds: [

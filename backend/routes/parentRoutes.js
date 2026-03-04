@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router()
 
-const { getParentRecommendations } = require("../controllers/parentController")
+const { getParentRecommendations, linkChild } = require("../controllers/parentController")
 const { protect, authorize } = require("../auth/authMiddleware")
 
 // Only parent role allowed
@@ -12,4 +12,10 @@ router.get(
   getParentRecommendations
 )
 
+router.post(
+  "/link-child",
+  protect,
+  authorize(["parent"]),
+  linkChild
+)
 module.exports = router
