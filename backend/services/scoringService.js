@@ -1,49 +1,46 @@
-const normalizeScore = (type, total) => {
-  const maxMap = {
-    PHQ9: 27,
-    GAD7: 21,
-    DASS21: 42
+const config = require("./assessmentConfig")
+
+const computeScores = (assessmentType, responses) => {
+
+  const rules = config[assessmentType]
+
+  if (!rules)
+    throw new Error("Invalid assessment type")
+
+  if (responses.length !== rules.questions)
+    throw new Error("Incorrect number of responses")
+
+  // Validate response values
+  for (const r of responses) {
+    if (r < rules.min || r > rules.max) {
+      throw new Error("Invalid response value")
+    }
   }
 
-  const max = maxMap[type] || 30
-  return Math.round((total / max) * 100)
-}
+  // Calculate total score
+  const totalScore =
+    responses.reduce((sum, val) => sum + val, 0)
 
-const computeScores = (assessmentType, rawResponses) => {
-  const total = rawResponses.reduce((a, b) => a + b, 0)
+  // Determine severity
+  let severity = "Unknown"
 
-  let severityLevel = "Minimal"
-
-  if (assessmentType === "PHQ9") {
-    if (total >= 20) severityLevel = "Severe"
-    else if (total >= 15) severityLevel = "Moderately Severe"
-    else if (total >= 10) severityLevel = "Moderate"
-    else if (total >= 5) severityLevel = "Mild"
+  for (const s of rules.severity) {
+    if (totalScore <= s.limit) {
+      severity = s.label
+      break
+    }
   }
 
-  if (assessmentType === "GAD7") {
-    if (total >= 15) severityLevel = "Severe"
-    else if (total >= 10) severityLevel = "Moderate"
-    else if (total >= 5) severityLevel = "Mild"
-  }
-
-  if (assessmentType === "DASS21") {
-    if (total >= 60) severityLevel = "Severe"
-    else if (total >= 40) severityLevel = "Moderate"
-    else if (total >= 20) severityLevel = "Mild"
-  }
-
-  const normalized = normalizeScore(assessmentType, total)
-
-  // Mental Health Index (inverse)
-  const mhIndex = 100 - normalized
+  // Normalize to MH Index (0-100)
+  const mhIndex =
+    Math.round((1 - totalScore / rules.maxScore) * 100)
 
   return {
-    totalScore: total,
-    severity: severityLevel,
-    normalizedScore: normalized,
+    totalScore,
+    severity,
     mhIndex
   }
+
 }
 
 module.exports = { computeScores }

@@ -19,6 +19,8 @@ const parentRoutes = require("../routes/parentRoutes")
 const audioRoutes = require("../routes/audioRoutes")
 const profileRoutes = require("../routes/profileRoutes")
 const counselorRoutes = require("../routes/counselorRoutes")
+const alertRoutes = require("../routes/alertRoutes")
+
 
 
 
@@ -59,8 +61,7 @@ app.use("/api/parent", parentRoutes)
 app.use("/api/audio", audioRoutes)
 app.use("/api/profile", profileRoutes)
 app.use("/api/counselor", counselorRoutes)
-
-
+app.use("/api", alertRoutes)
 
 
 app.get('/', (req, res) => {

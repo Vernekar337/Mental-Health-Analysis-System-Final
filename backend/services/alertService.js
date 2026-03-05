@@ -1,30 +1,25 @@
 const Alert = require("../models/Alert")
-const CaseFile = require("../models/CaseFile")
 const User = require("../models/User")
 
-const evaluateAlerts = async (user, severityLevel) => {
-  if (severityLevel !== "Severe") return
+const evaluateAlerts = async (studentId, severity) => {
 
-  const parents = await User.find({
+  if (severity !== "Severe") return
+
+  // find parent linked to student
+  const parent = await User.findOne({
     role: "parent",
-    linkedStudentIds: user._id
+    linkedStudentIds: studentId
   })
 
-  for (const parent of parents) {
-    await Alert.create({
-      userId: user._id,
-      triggeredBy: "High severity assessment",
-      severity: "High",
-      message:
-        "A recent assessment indicates elevated mental health risk.",
-      sentTo: parent.email
-    })
-  }
+  if (!parent) return
 
-  await CaseFile.create({
-    userId: user._id,
-    triggerReason: "Severe assessment result"
+  await Alert.create({
+    parentId: parent._id,
+    studentId,
+    severity,
+    message: "Severe mental health risk detected. Please review your child's report."
   })
+
 }
 
 module.exports = { evaluateAlerts }

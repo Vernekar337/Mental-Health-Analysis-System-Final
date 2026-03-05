@@ -28,7 +28,7 @@ Give:
     const response = await axios.post(
       "http://localhost:11434/api/generate",
       {
-        model: "mistral",
+        model: "phi",
         prompt: prompt,
         stream: false
       }
@@ -45,23 +45,32 @@ Give:
 const generateReflectionQuestions = async ({ mhIndex, severity, trend }) => {
   try {
     const prompt = `
-You are a clinical-style reflection question generator.
+You are a mental health reflection assistant.
 
-User Data:
-- Mental Health Index: ${mhIndex}
-- Severity: ${severity}
-- Trend: ${trend}
+Your job is to generate reflection questions for a student.
 
-Generate 5 personalized reflection questions.
+Student metrics:
+MH Index: ${latestAnalysis?.mhIndex ?? "unknown"}
+Severity: ${latestAnalysis?.severity ?? "unknown"}
+Trend: ${latestAnalysis?.trend ?? "unknown"}
+
+Recent assessments:
+${JSON.stringify(responses)}
 
 Rules:
-- Questions should encourage emotional awareness.
-- If severity is Moderate or Severe → focus on coping and triggers.
-- If trend is worsening → focus on recent changes.
-- If improving → focus on sustaining positive habits.
-- Keep questions short.
-- Do not number them.
-- Return only the questions separated by newline.
+- Generate exactly 5 questions.
+- Each question must be one sentence.
+- Do NOT include explanations.
+- Do NOT include code.
+- Do NOT include markdown.
+- Do NOT include anything except the questions.
+
+Output format:
+1. Question
+2. Question
+3. Question
+4. Question
+5. Question
 `
 
     const response = await axios.post(

@@ -111,4 +111,78 @@ const getStudentSuggestions = async (req, res) => {
 
 }
 
-module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions }
+
+const getStudentCase = async (req, res) => {
+
+  try {
+
+    const { studentId } = req.params
+
+    // verify student exists
+    const student = await User.findById(studentId)
+
+    if (!student || student.role !== "student") {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      })
+    }
+
+    // check if profile is public
+    if (!student.isProfilePublic) {
+      return res.status(403).json({
+        success: false,
+        message: "Student profile is private"
+      })
+    }
+
+    // latest analysis
+    const latestAnalysis =
+      await AnalysisResult
+      .findOne({ userId: studentId })
+      .sort({ createdAt: -1 })
+
+    // assessment history
+    const assessments =
+      await AssessmentResponse
+      .find({ userId: studentId })
+      .sort({ createdAt: -1 })
+
+    // suggestions given
+    const suggestions =
+      await Suggestion
+      .find({ studentId })
+      .populate("counselorId", "name")
+
+    res.json({
+
+      success: true,
+
+      student: {
+        id: student._id,
+        name: student.name,
+        age: student.age
+      },
+
+      analysis: latestAnalysis,
+
+      assessments,
+
+      suggestions
+
+    })
+
+  } catch (err) {
+
+    console.error(err)
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    })
+
+  }
+
+}
+
+module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions, getStudentCase }

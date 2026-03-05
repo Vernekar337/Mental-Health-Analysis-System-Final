@@ -1,29 +1,50 @@
-const computeTrend = (scores) => {
-  if (scores.length < 2) return "stable"
+const AssessmentResponse =
+require("../models/AssessmentResponse")
 
-  const last = scores[scores.length - 1]
-  const prev = scores[scores.length - 2]
+const generateAnalysis = async (userId, mhIndex) => {
 
-  if (last > prev) return "improving"
-  if (last < prev) return "worsening"
-  return "stable"
-}
+  const history =
+  await AssessmentResponse
+  .find({ userId })
+  .sort({ createdAt: -1 })
+  .limit(5)
 
-const generateAnalysis = (assessment, severityLevel) => {
-  const mhIndex = Math.min(100, assessment.computedScores.total * 4)
+  let trend = "stable"
+
+  if(history.length >= 2){
+
+    const latest = history[0].totalScore || 0
+    const previous = history[1].totalScore || 0
+
+    if(latest > previous)
+      trend = "worsening"
+
+    if(latest < previous)
+      trend = "improving"
+
+  }
+
+  const anomalyDetected =
+  mhIndex !== null && mhIndex < 30
 
   return {
-    mhIndex,
-    mhIndexBreakdown: {
-      score: assessment.computedScores.total,
-      severity: severityLevel
-    },
-    predictedTrajectory:
-      severityLevel === "Severe" ? "Declining" : "Stable",
+
+    trend,
+
+    anomalyDetected,
+
     clusterLabel:
-      severityLevel === "Severe" ? "High Risk" : "Normal",
-    anomalyDetected: severityLevel === "Severe"
+      mhIndex !== null && mhIndex < 40
+        ? "high-risk"
+        : "normal",
+
+    predictedTrajectory:
+      trend === "worsening"
+        ? "declining"
+        : "stable"
+
   }
+
 }
 
 module.exports = { generateAnalysis }

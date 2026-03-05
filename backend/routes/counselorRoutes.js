@@ -6,7 +6,7 @@ const { getPublicCases } = require("../controllers/counselorController")
 const { protect, authorize } = require("../auth/authMiddleware")
 const {
   writeSuggestion,
-  getStudentSuggestions
+  getStudentSuggestions, getStudentCase
 } = require("../controllers/counselorController")
 
 router.get(
@@ -28,6 +28,13 @@ router.get(
   protect,
   authorize(["student"]),
   getStudentSuggestions
+)
+
+router.get(
+  "/case/:studentId",
+  protect,
+  authorize(["counselor"]),
+  getStudentCase
 )
 
 module.exports = router
