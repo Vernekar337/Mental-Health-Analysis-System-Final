@@ -7,7 +7,7 @@ const authRouter = require("../routes/authRoutes")
 // const activityRouter = require("../routes/activityRoutes")
 const assessmentRoutes = require("../routes/assessmentRoutes")
 // const analyticsRoutes = require("../routes/analyticsRoutes")
-const reportRoutes = require("../routes/reportRoutes")
+
 // const reflectiveAssessmentRoutes = require("../routes/reflectiveAssessmentRoutes")
 // const alertRoutes = require("../routes/alertRoutes")
 // const counselorRoutes = require("../routes/counselorRoutes")
@@ -20,6 +20,8 @@ const audioRoutes = require("../routes/audioRoutes")
 const profileRoutes = require("../routes/profileRoutes")
 const counselorRoutes = require("../routes/counselorRoutes")
 const alertRoutes = require("../routes/alertRoutes")
+const reportRoutes = require("../routes/reportRoutes")
+
 
 
 
@@ -62,6 +64,7 @@ app.use("/api/audio", audioRoutes)
 app.use("/api/profile", profileRoutes)
 app.use("/api/counselor", counselorRoutes)
 app.use("/api", alertRoutes)
+app.use("/api/reports", reportRoutes)
 
 
 app.get('/', (req, res) => {

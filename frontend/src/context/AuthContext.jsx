@@ -7,13 +7,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for token in localStorage on mount
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Validate token or get user info (mocked for now)
-      setUser({ role: 'Student', name: 'John Doe' });
-    }
-    setLoading(false);
+    const hydrate = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Token invalid');
+        const data = await res.json();
+        setUser({ name: data.name, role: data.role });
+      } catch {
+        // Expired / invalid token — clear it
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
+    };
+    hydrate();
   }, []);
 
   const login = (userData, token) => {
@@ -34,3 +48,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+

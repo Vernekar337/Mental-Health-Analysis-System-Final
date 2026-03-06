@@ -1,9 +1,15 @@
 const express = require("express")
 const router = express.Router()
 
-const { getLatestReport } = require("../controllers/reportController")
 const { protect } = require("../auth/authMiddleware")
 
-router.get("/latest", protect, getLatestReport)
+const {
+  getDashboardReport,
+  getHistory
+} = require("../controllers/reportController")
+
+router.get("/dashboard", protect, getDashboardReport)
+
+router.get("/history", protect, getHistory)
 
 module.exports = router

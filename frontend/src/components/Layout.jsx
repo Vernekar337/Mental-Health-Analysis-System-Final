@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, FileText, Activity, LogOut, Menu, Clock, MessageSquare, Bell } from 'lucide-react';
+import { Home, FileText, Activity, LogOut, Menu, Clock, MessageSquare, Bell, Mic, UserPlus, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
@@ -45,6 +45,10 @@ const Layout = () => {
                 <MessageSquare className="w-5 h-5 mr-3" />
                 Relax Room
               </Link>
+              <Link to="/student/audio-diary" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/student/audio-diary') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                <Mic className="w-5 h-5 mr-3" />
+                Audio Diary
+              </Link>
             </>
           )}
 
@@ -58,6 +62,10 @@ const Layout = () => {
                 <FileText className="w-5 h-5 mr-3" />
                 All Cases
               </Link>
+              <Link to="/counselor/cases" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/student') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                <Users className="w-5 h-5 mr-3" />
+                Student Profiles
+              </Link>
             </>
           )}
 
@@ -70,6 +78,10 @@ const Layout = () => {
               <Link to="/parent/alerts" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/parent/alerts') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                 <Bell className="w-5 h-5 mr-3" />
                 Alerts
+              </Link>
+              <Link to="/parent/link-child" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/parent/link-child') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                <UserPlus className="w-5 h-5 mr-3" />
+                Link Child
               </Link>
             </>
           )}

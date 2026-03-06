@@ -2,7 +2,29 @@ const bcrypt = require("bcryptjs")
 const User = require("../models/User")
 const { generateToken } = require("../auth/jwt")
 
+const getMe = async (req, res) => {
+
+  try {
+
+    res.json({
+      name: req.user.name,
+      role: req.user.role
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      success:false,
+      message: err.message
+    });
+
+  }
+
+};
+
+
 // REGISTER
+
 const register = async (req, res) => {
   try {
     const { name, email, password, role, age } = req.body
@@ -44,7 +66,9 @@ const register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      token
+      token,
+      role: user.role,
+      name: user.name
     })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })
@@ -68,13 +92,15 @@ const login = async (req, res) => {
 
     const token = generateToken(user._id)
 
-    res.status(200).json({
+      res.status(201).json({
       success: true,
-      token
+      token,
+      role: user.role,
+      name: user.name
     })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   }
 }
 
-module.exports = { register, login }
+module.exports = { register, login, getMe }
