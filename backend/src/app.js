@@ -27,6 +27,9 @@ const reportRoutes = require("../routes/reportRoutes")
 
 
 
+
+
+
 const http = require("http")
 // const { Server } = require("socket.io")
 // const relaxRoomSocket = require("./sockets/relaxRoomSocket")
@@ -47,7 +50,7 @@ app.use("/api/auth", authRouter )
 // app.use("/api/mood", moodRouter )
 // app.use("/api/journal",journalRouter )
 // app.use("/api/activity", activityRouter)
-app.use("/api/assessment", assessmentRoutes )
+app.use("/api/assessments", assessmentRoutes )
 // app.use("/api/analytics", analyticsRoutes)
 app.use("/api/report", reportRoutes)
 // app.use(

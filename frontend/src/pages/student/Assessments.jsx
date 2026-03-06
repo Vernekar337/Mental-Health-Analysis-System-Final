@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { ASSESSMENTS } from '../../util/assessmentData';
 import { ClipboardList, ChevronRight, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { submitAssessment } from '../../services/api';
+
+const TYPE_MAP = {
+  "PHQ-9": "PHQ9",
+  "GAD-7": "GAD7",
+  "DASS-21": "DASS21"
+};
 
 const Assessments = () => {
   const [selectedAssessment, setSelectedAssessment] = useState(null);
@@ -43,21 +50,38 @@ const Assessments = () => {
   };
 
   const handleSubmit = async () => {
+
     setIsSubmitting(true);
 
-    // Construct Payload
-    const payload = {
-      assessmentType: selectedAssessment,
-      rawResponses: Object.keys(responses).sort((a, b) => a - b).map(k => responses[k])
-    };
+    try {
 
-    console.log("Submitting Payload:", payload);
+      const payload = {
+        assessmentType: TYPE_MAP[selectedAssessment],
+        responses: Object.keys(responses)
+          .sort((a, b) => a - b)
+          .map(k => responses[k])
+      };
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Submitting Payload:", payload);
 
-    setIsSubmitting(false);
-    setCompleted(true);
+      await submitAssessment(payload);
+
+      setCompleted(true);
+
+    }
+    catch (err) {
+
+      console.error("Submission error:", err);
+
+      alert("Failed to submit assessment");
+
+    }
+    finally {
+
+      setIsSubmitting(false);
+
+    }
+
   };
 
   const resetSelection = () => {
@@ -148,8 +172,8 @@ const Assessments = () => {
                 key={option.value}
                 onClick={() => handleOptionSelect(option.value)}
                 className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 flex items-center justify-between group ${responses[currentStep] === option.value
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                    : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                  : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-700'
                   }`}
               >
                 <span className="font-medium text-lg">{option.label}</span>
@@ -176,8 +200,8 @@ const Assessments = () => {
                 onClick={handleSubmit}
                 disabled={responses[currentStep] === undefined || isSubmitting}
                 className={`px-6 py-2 rounded-lg font-bold text-white transition-all ${responses[currentStep] === undefined || isSubmitting
-                    ? 'bg-slate-300 cursor-not-allowed'
-                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5'
+                  ? 'bg-slate-300 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5'
                   }`}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Assessment'}
@@ -187,8 +211,8 @@ const Assessments = () => {
                 onClick={handleNext}
                 disabled={responses[currentStep] === undefined}
                 className={`flex items-center px-6 py-2 rounded-lg font-medium transition-all ${responses[currentStep] === undefined
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    : 'bg-slate-900 text-white hover:bg-slate-800'
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}
               >
                 Next <ChevronRight className="w-4 h-4 ml-2" />

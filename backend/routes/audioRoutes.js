@@ -1,16 +1,32 @@
 const express = require("express")
 const router = express.Router()
 
-const { uploadAudio } = require("../controllers/audioController")
-const upload = require("../middlewares/upload")
+const auth = require("../auth/authMiddleware")
+const upload = require("../middlewares/audioUpload")
 
-const { protect } = require("../auth/authMiddleware")
+const {
+  uploadAudio,
+  analyzeAudio,
+  getHistory
+} = require("../controllers/audioController")
 
 router.post(
   "/upload",
-  protect,
+  auth.protect,
   upload.single("audio"),
   uploadAudio
+)
+
+router.post(
+  "/analyze",
+  auth.protect,
+  analyzeAudio
+)
+
+router.get(
+  "/history",
+  auth.protect,
+  getHistory
 )
 
 module.exports = router

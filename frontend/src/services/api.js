@@ -53,11 +53,23 @@ export const getAssessmentHistory = () => {
   return api.get("/reports/history");
 };
 
+export const getInsights = () => {
+  return api.get("/reports/insights")
+}
+
 /* =========================
    ASSESSMENTS
 ========================= */
 
 export const submitAssessment = (data) => {
+  return api.post("/assessments", data);
+};
+
+export const getReflectionQuestions = () => {
+  return api.get("/reflection/questions");
+};
+
+export const submitReflection = (data) => {
   return api.post("/assessments", data);
 };
 

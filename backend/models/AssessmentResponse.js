@@ -16,26 +16,23 @@ const assessmentResponseSchema = new mongoose.Schema(
     },
 
     responses: {
-      type: [Number],
+      type: [mongoose.Schema.Types.Mixed],
       required: true
-      // frontend sends array of answers
     },
 
     totalScore: {
-      type: Number,
-      required: true
-    },
+    type: Number,
+    default: null
+  },
 
     severity: {
       type: String,
-      required: true
-      //"mild", "moderate", "severe"
+      default: null
     },
 
     date: {
       type: Date,
-      required: true,
-      index: true
+      default: Date.now
     }
   },
   { timestamps: true }

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const audioDiarySchema = new mongoose.Schema({
+const AudioDiarySchema = new mongoose.Schema({
 
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -8,18 +8,31 @@ const audioDiarySchema = new mongoose.Schema({
     required: true
   },
 
-  audioPath: {
-    type: String
+  filePath: {
+    type: String,
+    required: true
   },
 
-  detectedEmotion: {
-    type: String
+  emotion: {
+    type: String,
+    default: null
   },
 
   confidence: {
-    type: Number
+    type: Number,
+    default: null
+  },
+
+  mentalState: {
+    type: String,
+    default: null
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 
-}, { timestamps: true })
+})
 
-module.exports = mongoose.model("AudioDiary", audioDiarySchema)
+module.exports = mongoose.model("AudioDiary", AudioDiarySchema)

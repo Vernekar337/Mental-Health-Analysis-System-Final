@@ -11,6 +11,7 @@ import {
 } from "recharts";
 
 import { Activity, FileText, Brain } from "lucide-react";
+import { getInsights } from "../../services/api"
 
 import {
   getStudentReport,
@@ -25,6 +26,8 @@ const StudentDashboard = () => {
   const [report, setReport] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [insights, setInsights] = useState([])
+  const [insightLoading, setInsightLoading] = useState(true)
 
   useEffect(() => {
 
@@ -60,6 +63,31 @@ const StudentDashboard = () => {
     };
 
     fetchData();
+    const fetchInsights = async () => {
+
+      try {
+
+        const res = await getInsights()
+
+        setInsights(res.data)
+
+      }
+
+      catch (err) {
+
+        console.error("Insight error:", err)
+
+      }
+
+      finally {
+
+        setInsightLoading(false)
+
+      }
+
+    }
+
+    fetchInsights()
 
   }, []);
 
@@ -133,10 +161,10 @@ const StudentDashboard = () => {
 
           <div
             className={`mt-2 text-3xl font-bold ${report?.severity === "Severe"
-                ? "text-red-600"
-                : report?.severity === "Moderate"
-                  ? "text-amber-600"
-                  : "text-emerald-600"
+              ? "text-red-600"
+              : report?.severity === "Moderate"
+                ? "text-amber-600"
+                : "text-emerald-600"
               }`}
           >
             {report?.severity ?? "Unknown"}
@@ -224,7 +252,8 @@ const StudentDashboard = () => {
         <div className="lg:col-span-1">
 
           <ExplainabilityPanel
-            reasons={report?.insights || []}
+            reasons={insights}
+            loading={insightLoading}
           />
 
         </div>

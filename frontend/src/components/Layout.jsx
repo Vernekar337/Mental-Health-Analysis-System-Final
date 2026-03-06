@@ -19,7 +19,7 @@ const Layout = () => {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          {user?.role === 'Student' && (
+          {user?.role === 'student' && (
             <>
               <Link to="/student/dashboard" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/student/dashboard') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                 <Home className="w-5 h-5 mr-3" />
@@ -52,7 +52,7 @@ const Layout = () => {
             </>
           )}
 
-          {user?.role === 'Counselor' && (
+          {user?.role === 'counselor' && (
             <>
               <Link to="/counselor/dashboard" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/counselor/dashboard') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                 <Home className="w-5 h-5 mr-3" />
@@ -69,7 +69,7 @@ const Layout = () => {
             </>
           )}
 
-          {user?.role === 'Parent' && (
+          {user?.role === 'parent' && (
             <>
               <Link to="/parent/report" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/parent/report') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                 <FileText className="w-5 h-5 mr-3" />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, FileText, CheckCircle, HelpCircle } from 'lucide-react';
-import { getPendingReflectiveAssessment, submitReflectiveAssessment } from '../../services/api';
+import { getReflectionQuestions, submitReflection } from '../../services/api';
 
 const ReflectiveAssessment = () => {
   const navigate = useNavigate();
@@ -12,14 +12,32 @@ const ReflectiveAssessment = () => {
 
   useEffect(() => {
     const fetchQuestions = async () => {
+
       try {
-        const res = await getPendingReflectiveAssessment();
-        setQuestions(res.data);
+
+        const res = await getReflectionQuestions();
+
+        const data = res.data.questions || [];
+
+        const formatted = data.map((q, i) => ({
+          id: i + 1,
+          question: q,
+          type: "text",
+          placeholder: "Write your thoughts..."
+        }));
+
+        setQuestions(formatted);
+
       } catch (error) {
+
         console.error("Failed to fetch reflective questions", error);
+
       } finally {
+
         setLoading(false);
+
       }
+
     };
     fetchQuestions();
   }, []);
@@ -35,7 +53,16 @@ const ReflectiveAssessment = () => {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await submitReflectiveAssessment(responses);
+      const answers = Object.values(responses);
+
+      await submitReflection({
+        assessmentType: "REFLECTION",
+        responses: answers
+      });
+      console.log("Reflection payload:", {
+        assessmentType: "REFLECTION",
+        responses: answers
+      })
       alert("Reflections submitted successfully.");
       navigate('/student/dashboard');
     } catch (error) {
@@ -90,8 +117,8 @@ const ReflectiveAssessment = () => {
                     key={option}
                     onClick={() => handleOptionSelect(q.id, option)}
                     className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${responses[q.id] === option
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                       }`}
                   >
                     <div className="flex items-center">

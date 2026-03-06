@@ -1,9 +1,12 @@
 const AssessmentResponse = require("../models/AssessmentResponse")
 const AnalysisResult = require("../models/AnalysisResult")
 
+const ReflectionAnalysis = require('../models/ReflectionAnalysis')
+
 const { computeScores } = require("../services/scoringService")
 const { generateAnalysis } = require("../services/analysisService")
 const { evaluateAlerts } = require("../services/alertService")
+const { analyzeReflection } = require("../services/reflectionAnalysisService")
 
 const assessmentConfig = require("../services/assessmentConfig")
 const {
@@ -77,27 +80,25 @@ const createAssessment = async (req, res) => {
   
     if (rules.type === "qualitative") {
 
-      const responseDoc = await AssessmentResponse.create({
+  const responseDoc = await AssessmentResponse.create({
+    userId: req.user._id,
+    assessmentType,
+    responses,
+    totalScore: null,
+    severity: null
+  })
 
-        userId: req.user._id,
-        assessmentType,
-        responses,
-        totalScore: null,
-        severity: "Reflection",
-        date: new Date()
+  const reflectionAnalysis = await analyzeReflection(responses)
 
-      })
-      const combined = await computeCombinedMHIndex(req.user._id)
+  await ReflectionAnalysis.create({
+    userId: req.user._id,
+    reflectionId: responseDoc._id,
+    ...reflectionAnalysis
+  })
 
-      const mhIndex = combined ? combined.mhIndex : null
+  return res.json({ success: true })
+}
 
-      return res.status(201).json({
-        success: true,
-        message: "Reflection responses saved",
-        responseId: responseDoc._id
-      })
-
-    }
 
   } catch (err) {
 
