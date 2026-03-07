@@ -1,50 +1,31 @@
-const AssessmentResponse =
-require("../models/AssessmentResponse")
+const MHIndexHistory = require("../models/MHIndexHistory")
 
-const generateAnalysis = async (userId, mhIndex) => {
+const detectTrend = async (userId) => {
 
-  const history =
-  await AssessmentResponse
-  .find({ userId })
-  .sort({ createdAt: -1 })
-  .limit(5)
+  const history = await MHIndexHistory
+    .find({ userId })
+    .sort({ createdAt: -1 })
+    .limit(3)
 
-  let trend = "stable"
-
-  if(history.length >= 2){
-
-    const latest = history[0].totalScore || 0
-    const previous = history[1].totalScore || 0
-
-    if(latest > previous)
-      trend = "worsening"
-
-    if(latest < previous)
-      trend = "improving"
-
+  if (history.length < 2) {
+    return "stable"
   }
 
-  const anomalyDetected =
-  mhIndex !== null && mhIndex < 30
+  const latest = history[0].mhIndex
+  const previous = history[1].mhIndex
 
-  return {
-
-    trend,
-
-    anomalyDetected,
-
-    clusterLabel:
-      mhIndex !== null && mhIndex < 40
-        ? "high-risk"
-        : "normal",
-
-    predictedTrajectory:
-      trend === "worsening"
-        ? "declining"
-        : "stable"
-
+  if (latest > previous + 5) {
+    return "improving"
   }
+
+  if (latest < previous - 5) {
+    return "declining"
+  }
+
+  return "stable"
 
 }
 
-module.exports = { generateAnalysis }
+module.exports = {
+  detectTrend
+}

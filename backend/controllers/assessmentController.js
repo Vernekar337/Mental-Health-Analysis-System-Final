@@ -88,13 +88,26 @@ const createAssessment = async (req, res) => {
     severity: null
   })
 
-  const reflectionAnalysis = await analyzeReflection(responses)
+  const aiQueue = require("../queues/aiQueue")
 
-  await ReflectionAnalysis.create({
-    userId: req.user._id,
-    reflectionId: responseDoc._id,
-    ...reflectionAnalysis
-  })
+await aiQueue.add(
+
+  "reflection",
+
+  {
+    type: "reflection",
+
+    payload: {
+
+      responses,
+      reflectionId: responseDoc._id,
+      userId: req.user._id
+
+    }
+
+  }
+
+)
 
   return res.json({ success: true })
 }

@@ -29,46 +29,36 @@ const uploadAudio = async (req, res) => {
 
 
 // Run ML analysis
+const aiQueue = require("../queues/aiQueue")
+
 const analyzeAudio = async (req, res) => {
 
   try {
 
     const { audioId } = req.body
 
-    const audio = await AudioDiary.findById(audioId)
+    await aiQueue.add(
 
-    if (!audio) {
-      return res.status(404).json({ message: "Audio not found" })
-    }
+      "audio",
 
-    // Call Python ML API
-    const mlResponse = await axios.post(
-      "http://localhost:8000/predict-emotion",
       {
-        filePath: audio.filePath
+        type: "audio",
+        payload: { audioId }
       }
+
     )
 
-    const { emotion, confidence, mentalState } = mlResponse.data
-
-    audio.emotion = emotion
-    audio.confidence = confidence
-    audio.mentalState = mentalState
-
-    await audio.save()
-
     res.json({
-      emotion,
-      confidence,
-      mentalState
+      success: true,
+      message: "Audio analysis started"
     })
 
-  } catch (err) {
+  }
 
-    console.error(err)
+  catch (err) {
 
     res.status(500).json({
-      message: "Audio analysis failed"
+      message: err.message
     })
 
   }
