@@ -109,6 +109,9 @@ export const linkChild = (childId) => {
 export const getParentReport = () => {
   return api.get("/parent/report");
 };
+export const getLinkedChildren = () => {
+  return api.get("/parent/children");
+};
 
 /* =========================
    COUNSELOR

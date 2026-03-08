@@ -1,3 +1,5 @@
+const connectDB = require("../config/database")
+connectDB()
 const { Worker } = require("bullmq")
 const connection = require("../config/redis")
 
@@ -9,15 +11,23 @@ const ReflectionAnalysis = require("../models/ReflectionAnalysis")
 const { analyzeReflection } =
 require("../services/reflectionAnalysisService")
 
+console.log("AI Worker started and waiting for jobs...")
+
+
+
 const worker = new Worker(
 
   "ai-processing",
 
   async job => {
 
+    console.log("Processing job:", job.name)
+
     const { type, payload } = job.data
 
     if (type === "reflection") {
+
+      console.log("Running reflection analysis...")
 
       const { responses, reflectionId, userId } = payload
 
@@ -28,6 +38,7 @@ const worker = new Worker(
 
         userId,
         reflectionId,
+
         signals: {
           stress: result.stress,
           sleepIssues: result.sleepIssues,
@@ -41,16 +52,23 @@ const worker = new Worker(
 
       })
 
+      console.log("Reflection analysis completed")
+
     }
 
     if (type === "audio") {
+
+      console.log("Running audio emotion analysis...")
 
       const { audioId } = payload
 
       const audio =
         await AudioDiary.findById(audioId)
 
-      if (!audio) return
+      if (!audio) {
+        console.log("Audio not found")
+        return
+      }
 
       const mlResponse = await axios.post(
 
@@ -71,6 +89,8 @@ const worker = new Worker(
 
       await audio.save()
 
+      console.log("Audio emotion analysis completed")
+
     }
 
   },
@@ -78,3 +98,15 @@ const worker = new Worker(
   { connection }
 
 )
+
+worker.on("completed", job => {
+
+  console.log(`Job ${job.id} completed successfully`)
+
+})
+
+worker.on("failed", (job, err) => {
+
+  console.error(`Job ${job.id} failed`, err)
+
+})

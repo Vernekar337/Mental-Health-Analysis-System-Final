@@ -22,6 +22,7 @@ const io = new Server(server, {
 })
 
 io.on("connection", (socket) => {
+  const roomUsers = {}
 
   const anonymousId = "User_" + Math.floor(Math.random() * 10000)
 
@@ -30,24 +31,34 @@ io.on("connection", (socket) => {
   // user joins a room chosen on frontend
   socket.on("joinRoom", async (room) => {
 
-    socket.join(room)
+  socket.join(room)
 
-    console.log(`${anonymousId} joined room ${room}`)
+  socket.room = room
 
-    try {
+  console.log(`${anonymousId} joined room ${room}`)
 
-      const history = await Message
-        .find({ room })
-        .sort({ createdAt: 1 })
-        .limit(50)
+  if (!roomUsers[room]) {
+    roomUsers[room] = []
+  }
 
-      socket.emit("chatHistory", history)
+  roomUsers[room].push(anonymousId)
 
-    } catch (err) {
-      console.error(err.message)
-    }
+  io.to(room).emit("onlineUsers", roomUsers[room].length)
 
-  })
+  try {
+
+    const history = await Message
+      .find({ room })
+      .sort({ createdAt: 1 })
+      .limit(50)
+
+    socket.emit("chatHistory", history)
+
+  } catch (err) {
+    console.error(err.message)
+  }
+
+})
 
   // send message
   socket.on("sendMessage", async ({ room, message }) => {
@@ -70,8 +81,25 @@ io.on("connection", (socket) => {
   })
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", anonymousId)
-  })
+
+  const room = socket.room
+
+  if (room && roomUsers[room]) {
+
+    roomUsers[room] = roomUsers[room].filter(u => u !== anonymousId)
+
+    io.to(room).emit("onlineUsers", roomUsers[room].length)
+
+  }
+
+  console.log("User disconnected:", anonymousId)
+
+})
+  socket.on("typing", () => {
+
+  socket.to(socket.room).emit("userTyping", anonymousId)
+
+})
 
 })
 
