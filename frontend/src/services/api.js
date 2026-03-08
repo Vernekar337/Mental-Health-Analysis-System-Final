@@ -133,6 +133,10 @@ export const submitCounselorSuggestion = (studentId, suggestion) => {
   return api.post(`/counselor/suggestions/${studentId}`, { suggestion });
 };
 
+export const getCounselorDirectory = () => {
+  return api.get("/counselor/directory");
+};
+
 /* =========================
    AUDIO DIARY
 ========================= */

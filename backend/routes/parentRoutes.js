@@ -1,10 +1,24 @@
 const express = require("express")
 const router = express.Router()
 
-const { getParentRecommendations, linkChild, getChildReport } = require("../controllers/parentController")
+const { getParentRecommendations, linkChild, getChildReport, getLinkedChildren, updateChildVisibility } = require("../controllers/parentController")
 const { protect, authorize } = require("../auth/authMiddleware")
 
 // Only parent role allowed
+router.patch(
+  "/child-visibility",
+  protect,
+  authorize(["parent"]),
+  updateChildVisibility
+)
+
+router.get(
+  "/children",
+  protect,
+  authorize(["parent"]),
+  getLinkedChildren
+)
+
 router.get(
   "/recommendations/:childId",
   protect,

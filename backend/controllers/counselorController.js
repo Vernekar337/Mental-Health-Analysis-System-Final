@@ -185,4 +185,29 @@ const getStudentCase = async (req, res) => {
 
 }
 
-module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions, getStudentCase }
+const getAvailableCounselors = async (req, res) => {
+
+  try {
+
+    const counselors = await User.find({
+      role: "counselor"
+    })
+    .select("name email")
+
+    res.json({
+      success: true,
+      counselors
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    })
+
+  }
+
+}
+
+module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions, getStudentCase, getAvailableCounselors }

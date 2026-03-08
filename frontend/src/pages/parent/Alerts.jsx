@@ -6,6 +6,7 @@ const ParentAlerts = () => {
 
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fadingAlerts, setFadingAlerts] = useState(new Set())
 
   useEffect(() => {
     fetchAlerts()
@@ -44,7 +45,18 @@ const ParentAlerts = () => {
 
       await acknowledgeAlert(id);
 
-      setAlerts(prev => prev.filter(a => a.id !== id));
+      // Trigger the fade-out animation
+      setFadingAlerts(prev => new Set(prev).add(id));
+
+      // Remove from layout after animation completes
+      setTimeout(() => {
+        setAlerts(prev => prev.filter(a => a.id !== id));
+        setFadingAlerts(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 500); // 500ms duration
 
     } catch (error) {
 
@@ -134,12 +146,13 @@ const ParentAlerts = () => {
         {alerts.map((alert) => {
 
           const style = getSeverityStyles(alert.severity)
+          const isFading = fadingAlerts.has(alert.id);
 
           return (
 
             <div
               key={alert.id}
-              className={`p-6 rounded-lg border shadow-sm ${style.bg} ${style.border}`}
+              className={`p-6 rounded-lg border shadow-sm transition-all duration-500 ease-out ${style.bg} ${style.border} ${isFading ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'}`}
             >
 
               <div className="flex items-start justify-between">
@@ -198,7 +211,8 @@ const ParentAlerts = () => {
 
                     <button
                       onClick={() => handleAcknowledge(alert.id)}
-                      className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-4 py-2 rounded-lg text-sm font-semibold"
+                      disabled={isFading}
+                      className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     >
 
                       Acknowledge

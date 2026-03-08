@@ -9,7 +9,8 @@ const evaluateAlerts = async (studentId, severity) => {
 if (signals.riskLevel === "high") {
 
   await Alert.create({
-    userId,
+    studentId : studentId,
+    parentId : userId,
     severity: "High",
     message: "High mental health risk detected from combined signals."
   })
@@ -27,6 +28,7 @@ if (signals.riskLevel === "high") {
   if (!parent) return
 
   await Alert.create({
+    studentId : studentId,
     parentId: parent._id,
     studentId,
     severity,

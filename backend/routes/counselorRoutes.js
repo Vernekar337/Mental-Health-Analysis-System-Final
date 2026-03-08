@@ -6,8 +6,15 @@ const { getPublicCases } = require("../controllers/counselorController")
 const { protect, authorize } = require("../auth/authMiddleware")
 const {
   writeSuggestion,
-  getStudentSuggestions, getStudentCase
+  getStudentSuggestions, getStudentCase, getAvailableCounselors
 } = require("../controllers/counselorController")
+
+router.get(
+  "/directory",
+  protect,
+  authorize(["parent"]),
+  getAvailableCounselors
+)
 
 router.get(
   "/cases",

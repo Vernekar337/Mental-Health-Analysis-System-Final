@@ -31,6 +31,7 @@ import NotFound from './pages/NotFound';
 import ParentReport from './pages/parent/Report';
 import ParentAlerts from './pages/parent/Alerts';
 import ParentLinkChild from './pages/parent/LinkChild';
+import FindCounselor from './pages/parent/FindCounselor';
 
 const App = () => {
   return (
@@ -73,6 +74,7 @@ const App = () => {
             <Route path="/parent/report" element={<ParentReport />} />
             <Route path="/parent/alerts" element={<ParentAlerts />} />
             <Route path="/parent/link-child" element={<ParentLinkChild />} />
+            <Route path="/parent/find-counselor" element={<FindCounselor />} />
           </Route>
 
           {/* Root Redirect */}

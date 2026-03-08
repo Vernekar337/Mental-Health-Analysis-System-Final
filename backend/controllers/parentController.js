@@ -2,6 +2,7 @@ const AnalysisResult = require("../models/AnalysisResult")
 const AssessmentResponse = require("../models/AssessmentResponse")
 const { generateParentRecommendations } = require("../services/llmService")
 const User = require("../models/User")
+const Reflection = require("../models/ReflectionAnalysis")
 
 const getParentRecommendations = async (req, res) => {
   try {
@@ -39,44 +40,79 @@ const getChildReport = async (req, res) => {
 
     const parentId = req.user._id
 
-    // find linked child
-    const child = await User.findOne({
-      parentId: parentId,
-      role: "student"
-    })
+    const parent = await User.findById(parentId)
 
-    if (!child) {
-      return res.status(404).json({
-        success: false,
-        message: "No child linked"
-      })
+    if (!parent || parent.linkedStudentIds.length === 0) {
+      return res.json({})
     }
 
-    // fetch latest analysis
-    const latestAnalysis =
-      await AnalysisResult
-      .findOne({ userId: child._id })
+    // Allow selecting specific child
+    let studentId = req.query.studentId
+
+    if (!studentId) {
+      studentId = parent.linkedStudentIds[0]
+    }
+
+    const student = await User.findById(studentId)
+
+    if (!student) {
+      return res.json({})
+    }
+
+    const latestAnalysis = await AnalysisResult
+      .findOne({ userId: studentId })
       .sort({ createdAt: -1 })
 
-    // fetch assessment history
-    const assessments =
-      await AssessmentResponse
-      .find({ userId: child._id })
+    const latestAssessment = await AssessmentResponse
+      .findOne({ userId: studentId })
       .sort({ createdAt: -1 })
+
+    const latestReflection = await Reflection
+      .findOne({ userId: studentId })
+      .sort({ createdAt: -1 })
+
+    const history = await AnalysisResult
+      .find({ userId: studentId })
+      .sort({ createdAt: 1 })
+
+    const trendData = history.map((item, i) => ({
+      name: `${i + 1}`,
+      score: item.mhIndex
+    }))
 
     res.json({
 
-      success: true,
+      childName: student.name,
 
-      child: {
-        id: child._id,
-        name: child.name,
-        age: child.age
+      mhIndex: latestAnalysis?.mhIndex || null,
+
+      severity: latestAssessment?.severity || "Unknown",
+
+      riskLevel: latestAnalysis?.anomalyDetected
+        ? "High Risk"
+        : "Low Risk",
+
+      trend: latestAnalysis?.predictedTrajectory || "Stable",
+
+      counselorName: "System",
+
+      reportDate: latestAssessment?.createdAt || null,
+
+      lastAssessmentDate: latestAssessment?.createdAt || null,
+
+      summary: "Mental health indicators based on latest assessment.",
+
+      studentReflection: latestReflection?.insight || null,
+
+      metrics: {
+        mood: "N/A",
+        stress: "N/A",
+        sleep: "N/A"
       },
 
-      analysis: latestAnalysis,
+      recommendations: [],
 
-      assessments
+      trendData
 
     })
 
@@ -85,8 +121,7 @@ const getChildReport = async (req, res) => {
     console.error(err)
 
     res.status(500).json({
-      success: false,
-      message: err.message
+      message: "Failed to fetch parent report"
     })
 
   }
@@ -99,44 +134,136 @@ const linkChild = async (req, res) => {
 
   try {
 
-    const { studentId } = req.body
-
     const parentId = req.user._id
+    const { email } = req.body
 
-    const student = await User.findById(studentId)
-
-    if (!student || student.role !== "student") {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found"
+    if (!email) {
+      return res.status(400).json({
+        message: "Student email is required"
       })
     }
 
-    // update student
+    const student = await User.findOne({
+      email: email.toLowerCase(),
+      role: "student"
+    })
+
+    if (!student) {
+      return res.status(404).json({
+        message: "Student account not found"
+      })
+    }
+
+    if (student.parentId) {
+      return res.status(400).json({
+        message: "Student is already linked to a parent"
+      })
+    }
+
+    const parent = await User.findById(parentId)
+
+    if (!parent) {
+      return res.status(404).json({
+        message: "Parent account not found"
+      })
+    }
+
+    // 🔹 Link student to parent
     student.parentId = parentId
     await student.save()
 
-    // update parent
-    await User.findByIdAndUpdate(
-      parentId,
-      { $addToSet: { linkedStudentIds: studentId } }
-    )
+    // 🔹 Add student to parent's linkedStudentIds
+    if (!parent.linkedStudentIds.includes(student._id)) {
+      parent.linkedStudentIds.push(student._id)
+      await parent.save()
+    }
 
     res.json({
       success: true,
-      message: "Child linked successfully"
+      student: {
+        _id: student._id,
+        name: student.name,
+        email: student.email
+      }
     })
 
-  } catch (err) {
+  } catch (error) {
+
+    console.error(error)
 
     res.status(500).json({
-      success: false,
-      message: err.message
+      message: "Failed to link child"
     })
 
   }
 
 }
 
+const updateChildVisibility = async (req, res) => {
 
-module.exports = { getParentRecommendations, linkChild, getChildReport }
+  try {
+
+    const { studentId, isPublic } = req.body
+    const parentId = req.user._id
+
+    const student = await User.findOne({
+      _id: studentId,
+      parentId: parentId
+    })
+
+    if (!student) {
+      return res.status(404).json({
+        message: "Student not found or not linked"
+      })
+    }
+
+    // Correct field from User schema
+    student.isProfilePublic = isPublic
+
+    await student.save()
+
+    res.json({
+      success: true,
+      isProfilePublic: student.isProfilePublic
+    })
+
+  } catch (error) {
+
+    console.error(error)
+
+    res.status(500).json({
+      message: "Failed to update visibility"
+    })
+
+  }
+
+}
+
+const getLinkedChildren = async (req, res) => {
+  try {
+
+    const parentId = req.user._id
+
+    const children = await User.find({
+      parentId: parentId,
+      role: "student"
+    })
+      .select("name email isProfilePublic")
+
+    res.json({
+      children
+    })
+
+  } catch (error) {
+
+    console.error(error)
+
+    res.status(500).json({
+      message: "Failed to fetch children"
+    })
+
+  }
+}
+
+
+module.exports = { getParentRecommendations, linkChild, getChildReport, getLinkedChildren, updateChildVisibility }
