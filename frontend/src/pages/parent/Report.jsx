@@ -180,10 +180,10 @@ const ParentReport = () => {
           </div>
 
           <p className={`text-xl font-bold ${report.severity === "High"
-              ? "text-red-600"
-              : report.severity === "Moderate"
-                ? "text-amber-600"
-                : "text-emerald-600"
+            ? "text-red-600"
+            : report.severity === "Moderate"
+              ? "text-amber-600"
+              : "text-emerald-600"
             }`}>
 
             {report.severity}
@@ -219,10 +219,10 @@ const ParentReport = () => {
           </div>
 
           <p className={`text-xl font-bold ${report.riskLevel === "High Risk"
-              ? "text-red-600"
-              : report.riskLevel === "Moderate Risk"
-                ? "text-amber-600"
-                : "text-emerald-600"
+            ? "text-red-600"
+            : report.riskLevel === "Moderate Risk"
+              ? "text-amber-600"
+              : "text-emerald-600"
             }`}>
 
             {report.riskLevel}
@@ -233,7 +233,7 @@ const ParentReport = () => {
 
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
         {/* Left column */}
 
@@ -275,7 +275,7 @@ const ParentReport = () => {
 
         {/* Right column */}
 
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-md">
 
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
 

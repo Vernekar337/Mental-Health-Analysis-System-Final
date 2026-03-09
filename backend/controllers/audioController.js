@@ -65,6 +65,37 @@ const analyzeAudio = async (req, res) => {
 
 }
 
+const renameAudio = async (req, res) => {
+
+  try {
+
+    const { audioId, title } = req.body
+
+    const audio = await AudioDiary.findById(audioId)
+
+    if (!audio) {
+      return res.status(404).json({ message: "Audio not found" })
+    }
+
+    audio.title = title
+
+    await audio.save()
+
+    res.json({
+      success: true,
+      audio
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
+      message: err.message
+    })
+
+  }
+
+}
+
 
 // Get history
 const getHistory = async (req, res) => {
@@ -72,8 +103,9 @@ const getHistory = async (req, res) => {
   try {
 
     const history = await AudioDiary
-      .find({ userId: req.user._id })
-      .sort({ createdAt: -1 })
+  .find({ userId: req.user._id })
+  .sort({ createdAt: -1 })
+  .select("emotion confidence mentalState createdAt")
 
     res.json({
       history
@@ -93,5 +125,6 @@ const getHistory = async (req, res) => {
 module.exports = {
   uploadAudio,
   analyzeAudio,
-  getHistory
+  getHistory,
+  renameAudio
 }

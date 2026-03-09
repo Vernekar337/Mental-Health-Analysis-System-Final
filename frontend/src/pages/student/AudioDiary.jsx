@@ -37,11 +37,6 @@ const AudioDiaryPage = () => {
 
   useEffect(() => {
     fetchHistory();
-
-    // Cleanup object URL on unmount
-    return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
-    };
   }, []);
 
   const fetchHistory = async () => {
@@ -63,7 +58,6 @@ const AudioDiaryPage = () => {
     setError(null);
     setSuccessMsg(null);
     setAudioBlob(null);
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(null);
     setAudioId(null);
     setSelectedFile(null);
@@ -109,7 +103,6 @@ const AudioDiaryPage = () => {
     setError(null);
     setSuccessMsg(null);
     setAudioBlob(null);
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(null);
 
     const file = e.target.files[0];
@@ -155,6 +148,7 @@ const AudioDiaryPage = () => {
       if (response.data && response.data.audioId) {
         setAudioId(response.data.audioId);
         setSuccessMsg("Audio saved successfully. Ready for analysis.");
+        fetchHistory();
       } else {
         throw new Error("Invalid response from server");
       }
@@ -193,6 +187,21 @@ const AudioDiaryPage = () => {
       setAnalysisLoading(false);
     }
   };
+
+  const renameDiary = async (audioId) => {
+
+    const title = prompt("Enter new diary title")
+
+    if (!title) return
+
+    await api.patch("/audio/rename", {
+      audioId,
+      title
+    })
+
+    fetchHistory()
+
+  }
 
   const clearState = () => {
     setAudioBlob(null);
@@ -359,8 +368,8 @@ const AudioDiaryPage = () => {
                 onClick={analyzeEmotion}
                 disabled={!audioId || analysisLoading}
                 className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white ${!audioId
-                    ? 'bg-gray-300 cursor-not-allowed'
-                    : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
                   } transition-colors w-full justify-center`}
               >
                 {analysisLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Play className="h-5 w-5 mr-2" />}
@@ -426,28 +435,76 @@ const AudioDiaryPage = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {history.length > 0 ? history.map((item, idx) => (
-                      <tr key={item.id || idx}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(item.timestamp || item.date).toLocaleString()}
+
+                    {history.length > 0 ? history.map((item) => (
+
+                      <tr key={item._id}>
+
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(item.createdAt).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {item.emotion}
+
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                          {item.title}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.confidence ? `${Math.round(item.confidence * 100)}%` : '-'}
+
+                        <td className="px-6 py-4 text-sm">
+
+
+
+                          {item.filePath ? (
+
+                            <audio controls className="w-48">
+                              <source src={`http://localhost:5000/${item.filePath.replace(/\\/g, "/")}`} />
+                            </audio>
+
+                          ) : (
+
+                            <span className="text-gray-400 text-sm">
+                              No audio file
+                            </span>
+
+                          )}
+
+
+
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.mentalState}
+
+                        <td className="px-6 py-4 text-sm">
+                          {item.emotion || "-"}
                         </td>
+
+                        <td className="px-6 py-4 text-sm">
+                          {item.confidence ? `${Math.round(item.confidence * 100)}%` : "-"}
+                        </td>
+
+                        <td className="px-6 py-4 text-sm">
+                          {item.mentalState || "-"}
+                        </td>
+
+                        <td>
+
+                          <button
+                            onClick={() => renameDiary(item._id)}
+                            className="text-blue-600 hover:underline"
+                          >
+                            Rename
+                          </button>
+
+                        </td>
+
                       </tr>
+
                     )) : (
+
                       <tr>
-                        <td colSpan="4" className="px-6 py-10 text-center text-sm text-gray-500 italic">
-                          No audio analysis history found. Record a diary to begin tracking.
+                        <td colSpan="6" className="text-center py-10 text-gray-500">
+                          No audio diary entries yet.
                         </td>
                       </tr>
+
                     )}
+
                   </tbody>
                 </table>
               </div>

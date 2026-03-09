@@ -113,6 +113,12 @@ export const getLinkedChildren = () => {
   return api.get("/parent/children");
 };
 
+export const requestConsultation = (counselorId) => {
+  return api.post("/counselor/request-consultation", {
+    counselorId
+  })
+}
+
 /* =========================
    COUNSELOR
 ========================= */
@@ -137,9 +143,6 @@ export const getCounselorDirectory = () => {
   return api.get("/counselor/directory");
 };
 
-export const requestConsultation = (counselorId) => {
-  return api.post("/counselor/request-consultation", { counselorId })
-}
 
 /* =========================
    AUDIO DIARY

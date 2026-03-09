@@ -1,55 +1,45 @@
 const Alert = require("../models/Alert")
 const User = require("../models/User")
-const { aggregateMentalSignals } =
-require("./mentalSignalAggregator")
 
-const evaluateAlerts = async (studentId, severity) => {
-  if (mhIndex < 40) {
+const evaluateAlerts = async (studentId, severity, mhIndex) => {
 
-  const student = await User.findById(userId)
+  try {
 
-  await Alert.create({
+    const student = await User.findById(studentId)
 
-    studentId: student._id,
-    parentId: student.parentId,
-    severity: "High",
+    if (!student || !student.parentId) return
 
-    message:
-      "Student mental health index has dropped significantly. Immediate attention recommended."
+    // 🔹 Case 1: Critical MH Index
+    if (mhIndex !== undefined && mhIndex < 40) {
 
-  })
+      await Alert.create({
+        studentId: student._id,
+        parentId: student.parentId,
+        severity: "High",
+        message:
+          "Student mental health index has dropped significantly. Immediate attention recommended."
+      })
 
-}
-  const signals = await aggregateMentalSignals(userId)
+    }
 
-if (signals.riskLevel === "high") {
+    // 🔹 Case 2: Severe assessment
+    if (severity === "Severe") {
 
-  await Alert.create({
-    studentId : studentId,
-    parentId : userId,
-    severity: "High",
-    message: "High mental health risk detected from combined signals."
-  })
+      await Alert.create({
+        studentId: student._id,
+        parentId: student.parentId,
+        severity: "Severe",
+        message:
+          "Severe mental health risk detected. Please review your child's report."
+      })
 
-}
+    }
 
-  if (severity !== "Severe") return
+  } catch (error) {
 
-  // find parent linked to student
-  const parent = await User.findOne({
-    role: "parent",
-    linkedStudentIds: studentId
-  })
+    console.error("Alert evaluation failed:", error)
 
-  if (!parent) return
-
-  await Alert.create({
-    studentId : studentId,
-    parentId: parent._id,
-    studentId,
-    severity,
-    message: "Severe mental health risk detected. Please review your child's report."
-  })
+  }
 
 }
 

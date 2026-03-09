@@ -99,6 +99,30 @@ const worker = new Worker(
 
 )
 
+const { analyzeAudioFile } = require("../services/audioAnalysisService")
+
+module.exports = async (job) => {
+
+  const { type, payload } = job.data
+
+  if (type !== "audio") return
+
+  const { audioId } = payload
+
+  const audio = await AudioDiary.findById(audioId)
+
+  if (!audio) throw new Error("Audio not found")
+
+  const result = await analyzeAudioFile(audio.filePath)
+
+  audio.emotion = result.emotion
+  audio.confidence = result.confidence
+  audio.mentalState = result.mentalState
+
+  await audio.save()
+
+}
+
 worker.on("completed", job => {
 
   console.log(`Job ${job.id} completed successfully`)

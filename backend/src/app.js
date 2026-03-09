@@ -68,6 +68,7 @@ app.use("/api/profile", profileRoutes)
 app.use("/api/counselor", counselorRoutes)
 app.use("/api", alertRoutes)
 app.use("/api/reports", reportRoutes)
+app.use("/uploads", express.static("uploads"))
 
 
 app.get('/', (req, res) => {

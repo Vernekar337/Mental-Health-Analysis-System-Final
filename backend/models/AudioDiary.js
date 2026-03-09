@@ -28,6 +28,11 @@ const AudioDiarySchema = new mongoose.Schema({
     default: null
   },
 
+  title: {
+  type: String,
+  default: "Untitled Diary"
+},
+
   createdAt: {
     type: Date,
     default: Date.now

@@ -7,7 +7,8 @@ const upload = require("../middlewares/audioUpload")
 const {
   uploadAudio,
   analyzeAudio,
-  getHistory
+  getHistory,
+  renameAudio
 } = require("../controllers/audioController")
 
 router.post(
@@ -27,6 +28,12 @@ router.get(
   "/history",
   auth.protect,
   getHistory
+)
+
+router.patch(
+  "/rename",
+  auth.protect,
+  renameAudio
 )
 
 module.exports = router

@@ -80,6 +80,22 @@ const getChildReport = async (req, res) => {
       score: item.mhIndex
     }))
 
+    let recommendations = []
+
+if (latestAnalysis) {
+
+  const aiRecommendation = await generateParentRecommendations({
+    mhIndex: latestAnalysis.mhIndex,
+    severity: latestAssessment?.severity || "Mild",
+    trend: latestAnalysis?.predictedTrajectory || "Stable"
+  })
+
+  recommendations = aiRecommendation
+  .split(/\d+\.\s/)
+  .filter(Boolean)
+
+}
+
     res.json({
 
       childName: student.name,
@@ -102,7 +118,11 @@ const getChildReport = async (req, res) => {
 
       summary: "Mental health indicators based on latest assessment.",
 
-      studentReflection: latestReflection?.insight || null,
+      studentReflection:
+  latestReflection?.analysis ||
+  latestReflection?.summary ||
+  latestReflection?.reflection ||
+  null,
 
       metrics: {
         mood: "N/A",
@@ -110,7 +130,7 @@ const getChildReport = async (req, res) => {
         sleep: "N/A"
       },
 
-      recommendations: [],
+      recommendations: recommendations,
 
       trendData
 
@@ -251,8 +271,9 @@ const getLinkedChildren = async (req, res) => {
       .select("name email isProfilePublic")
 
     res.json({
-      children
-    })
+  success: true,
+  children
+})
 
   } catch (error) {
 

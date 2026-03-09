@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Home, FileText, Activity, LogOut, Menu, Clock, MessageSquare, Bell, Mic, UserPlus, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { logoutUser } from "../services/auth"
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -57,8 +58,8 @@ const Layout = () => {
               <Link
                 to="/counselor/dashboard"
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/dashboard')
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <Home className="w-5 h-5 mr-3" />
@@ -68,9 +69,9 @@ const Layout = () => {
               <Link
                 to="/counselor/cases"
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/cases') ||
-                    location.pathname.startsWith('/counselor/student')
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  location.pathname.startsWith('/counselor/student')
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <FileText className="w-5 h-5 mr-3" />
@@ -80,8 +81,8 @@ const Layout = () => {
               <Link
                 to="/counselor/consultations"
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/consultations')
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <Users className="w-5 h-5 mr-3" />
@@ -113,8 +114,12 @@ const Layout = () => {
         </nav>
 
         <div className="p-4 border-t border-slate-800">
-          <button onClick={logout} className="flex items-center px-4 py-2 text-slate-400 hover:text-white w-full transition-colors">
-            <LogOut className="w-5 h-5 mr-3" />
+
+
+          <button
+            onClick={logoutUser}
+            className="flex items-center text-slate-300 hover:text-white"
+          >
             Logout
           </button>
         </div>
