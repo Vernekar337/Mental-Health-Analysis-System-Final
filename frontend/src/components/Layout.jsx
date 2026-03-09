@@ -54,17 +54,38 @@ const Layout = () => {
 
           {user?.role === 'counselor' && (
             <>
-              <Link to="/counselor/dashboard" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/counselor/dashboard') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+              <Link
+                to="/counselor/dashboard"
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/dashboard')
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+              >
                 <Home className="w-5 h-5 mr-3" />
                 Case Dashboard
               </Link>
-              <Link to="/counselor/cases" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive('/counselor/cases') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+
+              <Link
+                to="/counselor/cases"
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/cases') ||
+                    location.pathname.startsWith('/counselor/student')
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+              >
                 <FileText className="w-5 h-5 mr-3" />
                 All Cases
               </Link>
-              <Link to="/counselor/cases" className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/student') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+
+              <Link
+                to="/counselor/consultations"
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith('/counselor/consultations')
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+              >
                 <Users className="w-5 h-5 mr-3" />
-                Student Profiles
+                Consultation Requests
               </Link>
             </>
           )}

@@ -3,6 +3,69 @@ const AnalysisResult = require("../models/AnalysisResult")
 const AssessmentResponse = require("../models/AssessmentResponse")
 const Suggestion = require("../models/Suggestion")
 
+const ConsultationRequest = require("../models/ConsultationRequest")
+
+
+const getConsultationRequests = async (req, res) => {
+
+  try {
+
+    const counselorId = req.user._id
+
+    const requests = await ConsultationRequest
+      .find({ counselorId })
+      .populate("parentId", "name email")
+      .sort({ createdAt: -1 })
+
+    res.json({
+      success: true,
+      requests
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    })
+
+  }
+
+}
+
+const requestConsultation = async (req, res) => {
+
+  try {
+
+    const parentId = req.user._id
+    const { counselorId } = req.body
+
+    const request = await ConsultationRequest.create({
+
+      parentId,
+      counselorId
+
+    })
+
+    res.json({
+
+      success: true,
+      request
+
+    })
+
+  } catch (err) {
+
+    res.status(500).json({
+
+      success: false,
+      message: err.message
+
+    })
+
+  }
+
+}
 const getPublicCases = async (req, res) => {
 
   try {
@@ -210,4 +273,31 @@ const getAvailableCounselors = async (req, res) => {
 
 }
 
-module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions, getStudentCase, getAvailableCounselors }
+const getParentConsultationRequests = async (req,res)=>{
+
+  try{
+
+    const parentId = req.user._id
+
+    const requests = await ConsultationRequest
+      .find({ parentId })
+      .populate("counselorId","name email")
+      .sort({ createdAt:-1 })
+
+    res.json({
+      success:true,
+      requests
+    })
+
+  }catch(err){
+
+    res.status(500).json({
+      success:false,
+      message:err.message
+    })
+
+  }
+
+}
+
+module.exports = { getPublicCases, writeSuggestion, getStudentSuggestions, getStudentCase, getAvailableCounselors, requestConsultation, getConsultationRequests, getParentConsultationRequests }

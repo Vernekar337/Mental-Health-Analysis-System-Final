@@ -7,7 +7,7 @@ import {
   Calendar,
   MessageSquare
 } from 'lucide-react';
-
+import { requestConsultation } from '../../services/api'
 import { getCounselorDirectory } from '../../services/api';
 
 const FindCounselor = () => {
@@ -41,6 +41,24 @@ const FindCounselor = () => {
     fetchCounselors();
 
   }, []);
+
+  const handleRequest = async (counselorId) => {
+
+    try {
+
+      await requestConsultation(counselorId)
+
+      alert("Consultation request sent successfully")
+
+    } catch (error) {
+
+      console.error(error)
+
+      alert("Failed to send request")
+
+    }
+
+  }
 
   const filteredCounselors = counselors.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -172,7 +190,10 @@ const FindCounselor = () => {
 
             <div className="p-4 border-t border-slate-100 bg-slate-50">
 
-              <button className="w-full flex items-center justify-center py-2 px-4 shadow-sm text-sm font-medium rounded-md text-emerald-700 bg-emerald-100 hover:bg-emerald-200 transition-colors">
+              <button
+                onClick={() => handleRequest(counselor._id)}
+                className="w-full flex items-center justify-center py-2 px-4 shadow-sm text-sm font-medium rounded-md text-emerald-700 bg-emerald-100 hover:bg-emerald-200 transition-colors"
+              >
 
                 <MessageSquare className="w-4 h-4 mr-2" />
 

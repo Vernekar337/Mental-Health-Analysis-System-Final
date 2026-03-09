@@ -1,0 +1,20 @@
+
+> frontend@0.0.0 build
+> vite build
+
+[36mvite v7.1.7 [32mbuilding for production...[36m[39m
+transforming...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+/*! 🌼 daisyUI 5.1.25 */
+[32m✓[39m 63 modules transformed.
+[31m✗[39m Build failed in 2.75s
+[31merror during build:
+[31mCould not resolve "../../components/LoadingBoundary" from "src/pages/counselor/AllCases.jsx"[31m
+file: [36mC:/Users/Sahil.s.Vernekar/OneDrive/Documents/MERN+ML Projects/Mental-Health-Analysis-System/frontend/src/pages/counselor/AllCases.jsx[31m
+    at getRollupError (file:///C:/Users/Sahil.s.Vernekar/OneDrive/Documents/MERN+ML%20Projects/Mental-Health-Analysis-System/frontend/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/Sahil.s.Vernekar/OneDrive/Documents/MERN+ML%20Projects/Mental-Health-Analysis-System/frontend/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at ModuleLoader.handleInvalidResolvedId (file:///C:/Users/Sahil.s.Vernekar/OneDrive/Documents/MERN+ML%20Projects/Mental-Health-Analysis-System/frontend/node_modules/rollup/dist/es/shared/node-entry.js:21564:24)
+    at file:///C:/Users/Sahil.s.Vernekar/OneDrive/Documents/MERN+ML%20Projects/Mental-Health-Analysis-System/frontend/node_modules/rollup/dist/es/shared/node-entry.js:21524:26[39m

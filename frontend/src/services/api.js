@@ -137,6 +137,10 @@ export const getCounselorDirectory = () => {
   return api.get("/counselor/directory");
 };
 
+export const requestConsultation = (counselorId) => {
+  return api.post("/counselor/request-consultation", { counselorId })
+}
+
 /* =========================
    AUDIO DIARY
 ========================= */

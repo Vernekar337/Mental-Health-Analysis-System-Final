@@ -21,9 +21,10 @@ import AudioDiaryPage from './pages/student/AudioDiary'; // New Import
 
 // Counselor Pages
 import CounselorDashboard from './pages/counselor/Dashboard';
-import CounselorCaseDetail from './pages/counselor/CaseDetail'; // Real Component
-import { CaseReview as CounselorCases } from './pages/counselor/Placeholders';
-import CounselorStudentSuggestion from './pages/counselor/StudentSuggestion';
+import CounselorCaseDetail from './pages/counselor/CaseDetail';
+import CounselorAllCases from './pages/counselor/AllCases';
+import CounselorStudentProfile from './pages/counselor/StudentProfile';
+import CounselorConsultationRequests from './pages/counselor/ConsultationRequests';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -59,9 +60,10 @@ const App = () => {
           {/* Counselor */}
           <Route element={<ProtectedRoute allowedRoles={['counselor']} />}>
             <Route path="/counselor/dashboard" element={<CounselorDashboard />} />
-            <Route path="/counselor/cases" element={<CounselorCases />} />
+            <Route path="/counselor/cases" element={<CounselorAllCases />} />
             <Route path="/counselor/cases/:id" element={<CounselorCaseDetail />} />
-            <Route path="/counselor/student/:studentId" element={<CounselorStudentSuggestion />} />
+            <Route path="/counselor/student/:studentId" element={<CounselorStudentProfile />} />
+            <Route path="/counselor/consultations" element={<CounselorConsultationRequests />} />
           </Route>
 
           {/* Admin */}

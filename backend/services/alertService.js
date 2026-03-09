@@ -4,6 +4,22 @@ const { aggregateMentalSignals } =
 require("./mentalSignalAggregator")
 
 const evaluateAlerts = async (studentId, severity) => {
+  if (mhIndex < 40) {
+
+  const student = await User.findById(userId)
+
+  await Alert.create({
+
+    studentId: student._id,
+    parentId: student.parentId,
+    severity: "High",
+
+    message:
+      "Student mental health index has dropped significantly. Immediate attention recommended."
+
+  })
+
+}
   const signals = await aggregateMentalSignals(userId)
 
 if (signals.riskLevel === "high") {
