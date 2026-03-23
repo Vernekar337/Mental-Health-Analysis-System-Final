@@ -41,30 +41,41 @@ const createAssessment = async (req, res) => {
         severity,
         date: new Date()
       })
-      await evaluateAlerts(req.user._id, severity)
-      const combined = await computeCombinedMHIndex(req.user._id)
+      // await evaluateAlerts(req.user._id, severity)
+      let mhIndex = null
+let analysisMetrics = {}
 
-      const mhIndex =
-      combined ? combined.mhIndex : null
+try {
 
-      const analysisMetrics =
-        await generateAnalysis(req.user._id, mhIndex)
+  const combined = await computeCombinedMHIndex(req.user._id)
 
-      await AnalysisResult.create({
+  mhIndex = combined ? combined.mhIndex : null
 
-        userId: req.user._id,
-        assessmentId: responseDoc._id,
+  if (mhIndex !== null) {
+    analysisMetrics = await generateAnalysis(req.user._id, mhIndex)
+  }
 
-        mhIndex,
-        severity,
+} catch(err) {
 
-        trend: analysisMetrics.trend,
-        anomalyDetected: analysisMetrics.anomalyDetected,
-        clusterLabel: analysisMetrics.clusterLabel,
-        predictedTrajectory: analysisMetrics.predictedTrajectory,
+  console.error("Analysis generation failed:", err)
 
-        mhIndexBreakdown: combined ? combined.breakdown : {}
-      })
+}
+
+await AnalysisResult.create({
+
+  userId: req.user._id,
+  assessmentId: responseDoc._id,
+
+  mhIndex,
+  severity,
+
+  trend: analysisMetrics?.trend || "stable",
+  anomalyDetected: analysisMetrics?.anomalyDetected || false,
+  clusterLabel: analysisMetrics?.clusterLabel || "unknown",
+  predictedTrajectory: analysisMetrics?.predictedTrajectory || "stable",
+
+  mhIndexBreakdown: {}
+})
 
       
 
