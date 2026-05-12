@@ -20,8 +20,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "worker": "node workers/aiWorker.js"
+    "dev:api": "nodemon server.js",
+    "dev:worker": "node workers/aiWorker.js"
   },
   "dependencies": {
     "@google/genai": "^1.43.0",
@@ -43,6 +43,7 @@
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
     "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.14",
     "openai": "^6.25.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",

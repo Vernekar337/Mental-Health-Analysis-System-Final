@@ -36,8 +36,9 @@ const register = async (req, res) => {
       })
     }
 
+    const normalizedRole = role.toLowerCase()
     const allowedRoles = ["student", "parent", "counselor"]
-    if (!allowedRoles.includes(role)) {
+    if (!allowedRoles.includes(normalizedRole)) {
       return res.status(400).json({
         success: false,
         message: "Invalid role"
