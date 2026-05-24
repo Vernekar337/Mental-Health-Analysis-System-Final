@@ -134,3 +134,89 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# =========================
+# Node / React / Express
+# =========================
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Python / FastAPI / ML
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+backend/ml/venv/
+backend/audio_ml_service/venv/
+
+# Python build artifacts
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ML model files / generated artifacts
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+
+# =========================
+# Uploaded files / runtime data
+# =========================
+uploads/
+backend/uploads/
+backend/ml/uploads/
+backend/audio_ml_service/uploads/
+
+# Keep empty upload folders if needed
+!.gitkeep
+
+# =========================
+# Logs / temp
+# =========================
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+
+# =========================
+# OS / editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# Misc
+# =========================
+*.sqlite3
+*.db

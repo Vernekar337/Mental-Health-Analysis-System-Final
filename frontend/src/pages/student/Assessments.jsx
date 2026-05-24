@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ASSESSMENTS } from '../../util/assessmentData';
 import { ClipboardList, ChevronRight, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { submitAssessment } from '../../services/api';
+import { useNavigate } from "react-router-dom";
 
 const TYPE_MAP = {
   "PHQ-9": "PHQ9",
@@ -10,6 +11,7 @@ const TYPE_MAP = {
 };
 
 const Assessments = () => {
+  const navigate = useNavigate();
   const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [responses, setResponses] = useState({});
@@ -66,8 +68,10 @@ const Assessments = () => {
 
       await submitAssessment(payload);
 
-      setCompleted(true);
-
+navigate("/student/dashboard", {
+  replace: true,
+  state: { refresh: Date.now() }
+});
     }
     catch (err) {
 

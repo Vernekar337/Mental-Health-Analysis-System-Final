@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+
 const ReflectionAnalysisSchema = new mongoose.Schema({
 
   userId: {
@@ -22,6 +23,12 @@ const ReflectionAnalysisSchema = new mongoose.Schema({
 
   summary: String,
 
+  status: {
+    type: String,
+    enum: ["pending", "completed", "failed"],
+    default: "pending"
+  },
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -29,4 +36,7 @@ const ReflectionAnalysisSchema = new mongoose.Schema({
 
 })
 
-module.exports = mongoose.model("ReflectionAnalysis", ReflectionAnalysisSchema)
+module.exports = mongoose.model(
+  "ReflectionAnalysis",
+  ReflectionAnalysisSchema
+)

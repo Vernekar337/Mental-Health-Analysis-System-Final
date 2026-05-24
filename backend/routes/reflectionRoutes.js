@@ -1,9 +1,16 @@
 const express = require("express")
+
 const router = express.Router()
 
-const { getReflectionQuestions } = require("../controllers/reflectionController")
-const { protect } = require("../auth/authMiddleware")
+const {
+  getReflectionQuestions,
+  startReflectionAnalysis,
+  getReflectionStatus
+} = require("../controllers/reflectionController")
 
+const {
+  protect
+} = require("../auth/authMiddleware")
 
 router.get(
   "/questions",
@@ -11,7 +18,16 @@ router.get(
   getReflectionQuestions
 )
 
+router.post(
+  "/analyze",
+  protect,
+  startReflectionAnalysis
+)
 
-router.get("/", protect, getReflectionQuestions)
+router.get(
+  "/status/:id",
+  protect,
+  getReflectionStatus
+)
 
 module.exports = router

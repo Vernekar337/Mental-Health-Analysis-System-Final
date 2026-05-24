@@ -62,18 +62,14 @@ try {
 }
 
 await AnalysisResult.create({
-
   userId: req.user._id,
   assessmentId: responseDoc._id,
-
   mhIndex,
   severity,
-
   trend: analysisMetrics?.trend || "stable",
   anomalyDetected: analysisMetrics?.anomalyDetected || false,
   clusterLabel: analysisMetrics?.clusterLabel || "unknown",
   predictedTrajectory: analysisMetrics?.predictedTrajectory || "stable",
-
   mhIndexBreakdown: {}
 })
 

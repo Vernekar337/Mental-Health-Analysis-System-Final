@@ -1,7 +1,8 @@
+// In backend/routes/alertRoutes.js — REPLACE ENTIRE FILE:
 const express = require("express")
 const router = express.Router()
 
-const { protect } = require("../auth/authMiddleware")
+const { authUser } = require("../middlewares/authMiddleware")
 const role = require("../middlewares/role")
 
 const {
@@ -11,14 +12,14 @@ const {
 
 router.get(
   "/parent/alerts",
-  protect,
+  authUser,
   role("parent"),
   getParentAlerts
 )
 
 router.patch(
   "/parent/alerts/:id",
-  protect,
+  authUser,
   role("parent"),
   acknowledgeAlert
 )

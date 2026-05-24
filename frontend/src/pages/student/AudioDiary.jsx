@@ -168,7 +168,7 @@ const AudioDiaryPage = () => {
     setAnalysisResult(null);
 
     try {
-      const response = await api.post('/audio/analyze/', { audioId });
+      const response = await api.post('/audio/analyze', { audioId });
 
       if (response.data) {
         setAnalysisResult({
@@ -425,88 +425,60 @@ const AudioDiaryPage = () => {
           <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
               <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emotion</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mental State</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-
-                    {history.length > 0 ? history.map((item) => (
-
-                      <tr key={item._id}>
-
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(item.createdAt).toLocaleString()}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                          {item.title}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-
-
-
-                          {item.filePath ? (
-
-                            <audio controls className="w-48">
-                              <source src={`http://localhost:5000/${item.filePath.replace(/\\/g, "/")}`} />
-                            </audio>
-
-                          ) : (
-
-                            <span className="text-gray-400 text-sm">
-                              No audio file
-                            </span>
-
-                          )}
-
-
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-                          {item.emotion || "-"}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-                          {item.confidence ? `${Math.round(item.confidence * 100)}%` : "-"}
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-                          {item.mentalState || "-"}
-                        </td>
-
-                        <td>
-
-                          <button
-                            onClick={() => renameDiary(item._id)}
-                            className="text-blue-600 hover:underline"
-                          >
-                            Rename
-                          </button>
-
-                        </td>
-
-                      </tr>
-
-                    )) : (
-
-                      <tr>
-                        <td colSpan="6" className="text-center py-10 text-gray-500">
-                          No audio diary entries yet.
-                        </td>
-                      </tr>
-
-                    )}
-
-                  </tbody>
-                </table>
+                {/* Replace the entire <table> contents with: */}
+<table className="min-w-full divide-y divide-gray-200">
+  <thead className="bg-gray-50">
+    <tr>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Playback</th>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emotion</th>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mental State</th>
+      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+    </tr>
+  </thead>
+  <tbody className="bg-white divide-y divide-gray-200">
+    {history.length > 0 ? history.map((item) => (
+      <tr key={item._id}>
+        <td className="px-6 py-4 text-sm text-gray-500">
+          {new Date(item.createdAt).toLocaleString()}
+        </td>
+        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+          {item.title || 'Untitled Diary'}
+        </td>
+        <td className="px-6 py-4 text-sm">
+          {item.filePath ? (
+            <audio controls className="w-48">
+              <source src={`http://localhost:5000/${item.filePath.replace(/\\/g, "/")}`} />
+            </audio>
+          ) : (
+            <span className="text-gray-400 text-sm">No audio file</span>
+          )}
+        </td>
+        <td className="px-6 py-4 text-sm">{item.emotion || "-"}</td>
+        <td className="px-6 py-4 text-sm">
+          {item.confidence ? `${Math.round(item.confidence * 100)}%` : "-"}
+        </td>
+        <td className="px-6 py-4 text-sm">{item.mentalState || "-"}</td>
+        <td className="px-6 py-4 text-sm">
+          <button
+            onClick={() => renameDiary(item._id)}
+            className="text-blue-600 hover:underline"
+          >
+            Rename
+          </button>
+        </td>
+      </tr>
+    )) : (
+      <tr>
+        <td colSpan="7" className="text-center py-10 text-gray-500">
+          No audio diary entries yet.
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
               </div>
             </div>
           </div>

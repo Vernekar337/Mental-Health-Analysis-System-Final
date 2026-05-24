@@ -1,202 +1,164 @@
 const AnalysisResult = require("../models/AnalysisResult")
 const AssessmentResponse = require("../models/AssessmentResponse")
-const axios = require("axios")
+const Insight = require("../models/Insight")
+const aiQueue = require("../queues/aiQueue")
 
 /*
------------------------------------------
-Generate Insights using LLM (Ollama)
------------------------------------------
+  Helper: check if MH index changed enough to warrant new insights
+  Only regenerates if: no insight exists, OR mhIndex changed by >=2 points
 */
-const generateInsights = async ({ mhIndex, severity, trend }) => {
+const shouldRegenerateInsights = (latestInsight, currentMhIndex) => {
+  if (!latestInsight) return true
+  if (latestInsight.mhIndexAtGeneration === undefined) return true
+  return Math.abs(latestInsight.mhIndexAtGeneration - currentMhIndex) >= 2
+}
 
+/*
+  Helper: queue insight generation in background (non-blocking)
+  Passes last 5 assessment reports for better context
+*/
+const queueInsightGeneration = async (userId, mhIndex, severity, trend, recentAssessments) => {
   try {
-
-    const prompt = `
-You are a supportive mental health assistant.
-
-Student mental health summary:
-
-Mental Health Index: ${mhIndex}
-Severity Level: ${severity}
-Trend: ${trend}
-
-Provide 3 short supportive insights or coping suggestions.
-
-Rules:
-- Each insight must be one sentence.
-- No explanations.
-- No numbering.
-- No markdown.
-- Each sentence must end with a period.
-
-Example format:
-
-Insight text.
-Insight text.
-Insight text.
-`
-
-    const response = await axios.post(
-      "http://localhost:11434/api/generate",
-      {
-        model: "phi",
-        prompt: prompt,
-        stream: false
-      }
+    // Mark old insights as stale
+    await Insight.updateMany(
+      { userId, status: "completed" },
+      { status: "stale" }
     )
 
-    const text = response.data.response || ""
+    const insight = await Insight.create({
+      userId,
+      status: "pending",
+      mhIndexAtGeneration: mhIndex
+    })
 
-    const insights = text
-      .split("\n")
-      .map(i => i.trim())
-      .filter(Boolean)
-
-    return insights.slice(0,3)
-
+    await aiQueue.add("insight", {
+      type: "insight",
+      payload: {
+        insightId: insight._id,
+        mhIndex,
+        severity,
+        trend,
+        recentAssessments: recentAssessments.map(a => ({
+          type: a.assessmentType,
+          score: a.totalScore,
+          severity: a.severity,
+          date: a.createdAt
+        }))
+      }
+    })
+  } catch (err) {
+    console.error("Failed to queue insight generation:", err.message)
   }
-
-  catch (err) {
-
-    console.error("LLM Insight Error:", err.message)
-
-    return []
-
-  }
-
 }
 
 /*
 -----------------------------------------
 GET /api/reports/dashboard
-Student Dashboard Summary
+Returns immediately — no LLM wait
 -----------------------------------------
 */
 const getDashboardReport = async (req, res) => {
-
   try {
+    const userId = req.user._id
 
-    const latestAnalysis = await AnalysisResult
-      .findOne({ userId: req.user._id })
-      .sort({ createdAt: -1 })
-
-    const latestAssessment = await AssessmentResponse
-      .findOne({ userId: req.user._id, assessmentType: { $in: ["PHQ9","GAD7","DASS21"] }})
-      .sort({ createdAt: -1 })
+    const [latestAnalysis, latestAssessment, recentAssessments, latestInsight] = await Promise.all([
+      AnalysisResult.findOne({ userId }).sort({ createdAt: -1 }),
+      AssessmentResponse.findOne({
+        userId,
+        assessmentType: { $in: ["PHQ9", "GAD7", "DASS21"] }
+      }).sort({ createdAt: -1 }),
+      // Last 5 assessments for insight context
+      AssessmentResponse.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(5),
+      // Latest completed insight (served instantly from cache)
+      Insight.findOne({ userId, status: "completed" }).sort({ createdAt: -1 })
+    ])
 
     if (!latestAnalysis) {
-
       return res.json({
         mhIndex: null,
         severity: "Unknown",
         trend: "-",
         insights: [],
+        insightStatus: "no_data",
         caseStatus: "None"
       })
-
     }
 
-    const severity = latestAssessment
-      ? latestAssessment.severity
-      : "Unknown"
-
+    const severity = latestAssessment?.severity || "Unknown"
     const trend = latestAnalysis.trend || "stable"
+    const mhIndex = latestAnalysis.mhIndex
 
-    const insights = await generateInsights({
-      mhIndex: latestAnalysis.mhIndex,
-      severity,
-      trend
-    })
+    // Serve cached insights immediately — no waiting
+    const cachedInsights = latestInsight?.content
+      ? (Array.isArray(latestInsight.content)
+          ? latestInsight.content
+          : latestInsight.content.split("\n").filter(Boolean))
+      : []
+
+    // Decide if we need to regenerate in the background
+    if (shouldRegenerateInsights(latestInsight, mhIndex)) {
+      // Fire and forget — does NOT block this response
+      queueInsightGeneration(userId, mhIndex, severity, trend, recentAssessments)
+    }
 
     res.json({
-
-      mhIndex: latestAnalysis.mhIndex,
-
+      mhIndex,
       severity,
-
       trend,
-
-      insights,
-
-      caseStatus: latestAnalysis.anomalyDetected
-        ? "Pending Review"
-        : "Normal"
-
+      insights: cachedInsights,
+      insightStatus: latestInsight ? (shouldRegenerateInsights(latestInsight, mhIndex) ? "regenerating" : "ready") : "generating",
+      caseStatus: latestAnalysis.anomalyDetected ? "Pending Review" : "Normal"
     })
 
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
   }
-
-  catch (err) {
-
-    res.status(500).json({
-      success:false,
-      message:err.message
-    })
-
-  }
-
 }
 
 /*
 -----------------------------------------
 GET /api/reports/insights
-LLM Insights (slow endpoint)
+Poll this separately to get latest insights
+Returns instantly from cache, status tells frontend if still generating
 -----------------------------------------
 */
-
 const getInsights = async (req, res) => {
-
   try {
+    const userId = req.user._id
 
-    const latestAnalysis = await AnalysisResult
-      .findOne({ userId: req.user._id })
-      .sort({ createdAt: -1 })
+    const latestInsight = await Insight.findOne({
+      userId,
+      status: { $in: ["completed", "pending"] }
+    }).sort({ createdAt: -1 })
 
-    const latestAssessment = await AssessmentResponse
-      .findOne({ userId: req.user._id })
-      .sort({ createdAt: -1 })
-
-    if (!latestAnalysis) {
-      return res.json([])
+    if (!latestInsight) {
+      return res.json({ status: "no_data", insights: [] })
     }
 
-    const severity = latestAssessment
-      ? latestAssessment.severity
-      : "Unknown"
+    if (latestInsight.status === "pending") {
+      return res.json({ status: "generating", insights: [] })
+    }
 
-    const trend = latestAnalysis.trend || "stable"
+    const insights = Array.isArray(latestInsight.content)
+      ? latestInsight.content
+      : latestInsight.content.split("\n").filter(Boolean)
 
-    const insights = await generateInsights({
-      mhIndex: latestAnalysis.mhIndex,
-      severity,
-      trend
-    })
+    res.json({ status: "ready", insights })
 
-    res.json(insights)
-
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
   }
-
-  catch (err) {
-
-    res.status(500).json({
-      success:false,
-      message:err.message
-    })
-
-  }
-
 }
 
 /*
 -----------------------------------------
 GET /api/reports/history
-Chart Data for Dashboard
 -----------------------------------------
 */
 const getHistory = async (req, res) => {
-
   try {
-
     const history = await AnalysisResult
       .find({ userId: req.user._id })
       .sort({ createdAt: 1 })
@@ -208,21 +170,9 @@ const getHistory = async (req, res) => {
 
     res.json(formatted)
 
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
   }
-
-  catch (err) {
-
-    res.status(500).json({
-      success:false,
-      message:err.message
-    })
-
-  }
-
 }
 
-module.exports = {
-  getDashboardReport,
-  getHistory,
-  getInsights
-}
+module.exports = { getDashboardReport, getHistory, getInsights }

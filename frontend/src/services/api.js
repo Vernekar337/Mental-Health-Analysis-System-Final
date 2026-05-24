@@ -12,15 +12,11 @@ const api = axios.create({
 ========================= */
 
 api.interceptors.request.use((config) => {
-
   const token = localStorage.getItem("token");
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
-
 });
 
 /* =========================
@@ -30,14 +26,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       window.location.href = "/login";
     }
-
     return Promise.reject(err);
-
   }
 );
 
@@ -53,9 +47,17 @@ export const getAssessmentHistory = () => {
   return api.get("/reports/history");
 };
 
-export const getInsights = () => {
-  return api.get("/reports/insights")
-}
+export const getInsights = async () => {
+  const res = await api.get("/reports/insights");
+  // Normalize: backend returns { status, insights } — extract the array
+  if (res.data && Array.isArray(res.data.insights)) {
+    return { ...res, data: res.data.insights };
+  }
+  if (Array.isArray(res.data)) {
+    return res;
+  }
+  return { ...res, data: [] };
+};
 
 /* =========================
    ASSESSMENTS
@@ -86,9 +88,72 @@ export const submitReflectiveAssessment = (data) => {
 };
 
 /* =========================
-   RELAX ROOM (CHAT)
+   MOOD
 ========================= */
-/* handled by socket.io — no API needed */
+
+export const createMoodEntry = (data) => {
+  return api.post("/mood", data);
+};
+
+export const getMoodEntries = () => {
+  return api.get("/mood");
+};
+
+export const getMoodByDateRange = (from, to) => {
+  return api.get(`/mood/range?from=${from}&to=${to}`);
+};
+
+/* =========================
+   JOURNAL
+========================= */
+
+export const createJournalEntry = (data) => {
+  return api.post("/journal", data);
+};
+
+export const getJournalEntries = () => {
+  return api.get("/journal");
+};
+
+export const getJournalEntryById = (id) => {
+  return api.get(`/journal/${id}`);
+};
+
+export const deleteJournalEntry = (id) => {
+  return api.delete(`/journal/${id}`);
+};
+
+/* =========================
+   ACTIVITY
+========================= */
+
+export const createActivityLog = (data) => {
+  return api.post("/activity", data);
+};
+
+export const getActivityLogs = () => {
+  return api.get("/activity");
+};
+
+/* =========================
+   ANALYTICS
+========================= */
+
+export const getWeeklyMoodAverage = () => {
+  return api.get("/analytics/mood/weekly");
+};
+
+export const getMoodDistribution = () => {
+  return api.get("/analytics/mood/distribution");
+};
+
+export const getAssessmentTrend = (type) => {
+  return api.get(`/analytics/assessment/${type}`);
+};
+
+export const getMonthlySummary = (year, month) => {
+  return api.get(`/analytics/summary/monthly?year=${year}&month=${month}`);
+};
 
 /* =========================
    PARENT
@@ -109,15 +174,14 @@ export const linkChild = (childId) => {
 export const getParentReport = () => {
   return api.get("/parent/report");
 };
+
 export const getLinkedChildren = () => {
   return api.get("/parent/children");
 };
 
 export const requestConsultation = (counselorId) => {
-  return api.post("/counselor/request-consultation", {
-    counselorId
-  })
-}
+  return api.post("/counselor/request-consultation", { counselorId });
+};
 
 /* =========================
    COUNSELOR
@@ -128,7 +192,7 @@ export const getCounselorCases = () => {
 };
 
 export const getCaseDetail = (id) => {
-  return api.get(`/counselor/cases/${id}`);
+  return api.get(`/counselor/case/${id}`);
 };
 
 export const updateCaseStatus = (id, status) => {
@@ -136,13 +200,12 @@ export const updateCaseStatus = (id, status) => {
 };
 
 export const submitCounselorSuggestion = (studentId, suggestion) => {
-  return api.post(`/counselor/suggestions/${studentId}`, { suggestion });
+  return api.post("/counselor/suggestion", { studentId, suggestion });
 };
 
 export const getCounselorDirectory = () => {
   return api.get("/counselor/directory");
 };
-
 
 /* =========================
    AUDIO DIARY

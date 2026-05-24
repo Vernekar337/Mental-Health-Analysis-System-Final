@@ -99,29 +99,17 @@ const renameAudio = async (req, res) => {
 
 // Get history
 const getHistory = async (req, res) => {
-
   try {
-
     const history = await AudioDiary
-  .find({ userId: req.user._id })
-  .sort({ createdAt: -1 })
-  .select("emotion confidence mentalState createdAt")
+      .find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .select("title filePath emotion confidence mentalState createdAt");
 
-    res.json({
-      history
-    })
-
+    res.json({ history });
   } catch (err) {
-
-    res.status(500).json({
-      message: err.message
-    })
-
+    res.status(500).json({ message: err.message });
   }
-
-}
-
-
+};
 module.exports = {
   uploadAudio,
   analyzeAudio,

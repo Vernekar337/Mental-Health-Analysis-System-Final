@@ -1,62 +1,55 @@
 const axios = require("axios")
 
+const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434/api/generate"
+const MODEL = process.env.LLM_MODEL || "phi"
+
 const analyzeReflection = async (answers) => {
-
   try {
-
-    const prompt = `
-You are a mental health analysis assistant.
+    const prompt = `You are a mental health analysis assistant.
 
 Analyze the following student reflection responses.
 
-Identify signals such as:
-- stress
-- anxiety
-- sleep issues
-- academic pressure
-- negative mood
+Identify signals such as stress, anxiety, sleep issues, academic pressure, negative mood.
 
-Return JSON format like:
+Return ONLY valid JSON, no extra text, no markdown backticks:
 
 {
-  "stress": "low | medium | high",
-  "sleepIssues": true | false,
-  "academicPressure": true | false,
-  "negativeMood": true | false,
+  "stress": "low",
+  "sleepIssues": false,
+  "academicPressure": false,
+  "negativeMood": false,
   "summary": "short explanation"
 }
 
+stress must be one of: low, medium, high
+sleepIssues, academicPressure, negativeMood must be true or false
+
 Responses:
-${answers.join("\n")}
-`
+${answers.join("\n")}`
 
-    const response = await axios.post(
-      "http://localhost:11434/api/generate",
-      {
-        model: "phi",
-        prompt,
-        stream: false
-      }
-    )
+    const response = await axios.post(OLLAMA_URL, {
+      model: MODEL,
+      prompt,
+      stream: false
+    })
 
-    const text = response.data.response
+    const text = response.data.response || ""
 
     try {
-      return JSON.parse(text)
+      const clean = text.replace(/```json|```/g, "").trim()
+      return JSON.parse(clean)
     } catch {
       return {
         stress: "unknown",
         sleepIssues: false,
         academicPressure: false,
         negativeMood: false,
-        summary: "LLM response parsing failed"
+        summary: "Analysis parsing failed"
       }
     }
 
   } catch (err) {
-
     console.error("Reflection analysis failed:", err.message)
-
     return {
       stress: "unknown",
       sleepIssues: false,
@@ -64,9 +57,7 @@ ${answers.join("\n")}
       negativeMood: false,
       summary: "Reflection analysis unavailable"
     }
-
   }
-
 }
 
 module.exports = { analyzeReflection }

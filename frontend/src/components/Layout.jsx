@@ -117,11 +117,15 @@ const Layout = () => {
 
 
           <button
-            onClick={logoutUser}
-            className="flex items-center text-slate-300 hover:text-white"
-          >
-            Logout
-          </button>
+  onClick={() => {
+    logout();
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }}
+  className="flex items-center text-slate-300 hover:text-white"
+>
+  Logout
+</button>
         </div>
       </aside>
 

@@ -1,53 +1,74 @@
 const axios = require("axios")
 
-const generateInsights = async ({ mhIndex, severity, trend }) => {
+const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434/api/generate"
+const MODEL = process.env.LLM_MODEL || "phi"
+
+/*
+  Now receives historyContext — a summary of last 5 assessments
+  so the model has full picture of what's been happening
+*/
+const generateInsights = async ({ mhIndex, severity, trend, historyContext }) => {
   try {
-    const prompt = `
-You are a supportive mental health assistant.
+    const prompt = `You are a supportive mental health assistant analyzing a student's mental health data.
 
-User Assessment Summary:
+Current Status:
 - Mental Health Index (0-100, higher is better): ${mhIndex}
-- Severity: ${severity}
-- Trend over time: ${trend}
+- Current Severity: ${severity}
+- Trend: ${trend}
 
-Based on this data:
+Recent Assessment History (last 5 reports):
+${historyContext || "No history available."}
 
-1. If MH index is below 50 → focus on coping strategies.
-2. If severity is Moderate or Severe → suggest seeking support.
-3. If trend is worsening → suggest immediate attention.
-4. If improving → encourage consistency.
+Based on the above history and current status, provide exactly 3 specific, practical, personalized insights or coping suggestions for this student.
 
-Give:
-- 3 specific, practical suggestions
-- Keep under 120 words
-- Be empathetic but not overly dramatic
-- Do NOT say "I am here for you"
-- Do NOT mention AI
-`
+Rules:
+- Each insight must be one sentence only.
+- Reference the trend or history when relevant.
+- No numbering, no bullet points, no markdown.
+- No explanations or preamble.
+- Do NOT mention AI or that you are an AI.
+- Each sentence ends with a period.
 
-    const response = await axios.post(
-      "http://localhost:11434/api/generate",
-      {
-        model: "phi",
-        prompt: prompt,
-        stream: false
-      }
-    )
+Output only the 3 sentences, one per line.`
 
-    return response.data.response
+    const response = await axios.post(OLLAMA_URL, {
+      model: MODEL,
+      prompt,
+      stream: false
+    })
+
+    const text = response.data.response || ""
+
+    const insights = text
+      .split("\n")
+      .map(i => i.replace(/^\d+\.\s*|^[-*]\s*/, "").trim())
+      .filter(i => i.length > 10 && i.endsWith("."))
+
+    return insights.slice(0, 3).length > 0
+      ? insights.slice(0, 3)
+      : [
+          "Consider taking short breaks throughout your day to manage stress.",
+          "Reaching out to a trusted friend or counselor can provide valuable support.",
+          "Maintaining a consistent sleep schedule can significantly improve mental wellbeing."
+        ]
 
   } catch (err) {
     console.error("Ollama error:", err.message)
-    return "Unable to generate insights right now."
+    return [
+      "Consider taking short breaks throughout your day to manage stress.",
+      "Reaching out to a trusted friend or counselor can provide valuable support.",
+      "Maintaining a consistent sleep schedule can significantly improve mental wellbeing."
+    ]
   }
 }
 
-const generateReflectionQuestions = async ({ mhIndex, severity, trend }) => {
+const generateReflectionQuestions = async ({ userId, latestAnalysis, recentAssessments }) => {
   try {
-    const prompt = `
-You are a mental health reflection assistant.
+    const responses = recentAssessments
+      ? recentAssessments.map(a => ({ type: a.assessmentType, answers: a.responses }))
+      : []
 
-Your job is to generate reflection questions for a student.
+    const prompt = `You are a mental health reflection assistant.
 
 Student metrics:
 MH Index: ${latestAnalysis?.mhIndex ?? "unknown"}
@@ -57,80 +78,57 @@ Trend: ${latestAnalysis?.trend ?? "unknown"}
 Recent assessments:
 ${JSON.stringify(responses)}
 
-Rules:
-- Generate exactly 5 questions.
-- Each question must be one sentence.
-- Do NOT include explanations.
-- Do NOT include code.
-- Do NOT include markdown.
-- Do NOT include anything except the questions.
+Generate exactly 5 reflection questions. Output only the questions, no explanations, no markdown.
 
-Output format:
 1. Question
 2. Question
 3. Question
 4. Question
-5. Question
-`
+5. Question`
 
-    const response = await axios.post(
-      "http://localhost:11434/api/generate",
-      {
-        model: "phi", // or "mistral" if stable
-        prompt: prompt,
-        stream: false
-      }
-    )
+    const response = await axios.post(OLLAMA_URL, {
+      model: MODEL,
+      prompt,
+      stream: false
+    })
 
-    const raw = response.data.response
+    const raw = response.data.response || ""
 
-    // Convert response text into clean array
     const questions = raw
       .split("\n")
-      .map(q => q.trim())
+      .map(q => q.replace(/^\d+\.\s*/, "").trim())
       .filter(q => q.length > 10)
 
-    return questions
+    return questions.slice(0, 5)
 
   } catch (err) {
     console.error("Reflection LLM error:", err.message)
     return [
       "What emotions have been most present for you recently?",
       "What situations have affected your mood the most this week?",
-      "What coping strategies have worked for you lately?"
+      "What coping strategies have worked for you lately?",
+      "How would you describe your energy levels over the past few days?",
+      "What is one small thing you could do tomorrow to support your wellbeing?"
     ]
   }
 }
 
 const generateParentRecommendations = async ({ mhIndex, severity, trend }) => {
   try {
-    const prompt = `
-You are a mental health support assistant helping a parent.
+    const prompt = `You are a mental health support assistant helping a parent.
 
 Child's Data:
 - Mental Health Index: ${mhIndex}
 - Severity: ${severity}
 - Trend: ${trend}
 
-Generate 4 practical recommendations for the parent to support their child.
+Generate 4 practical recommendations for the parent. Be calm and practical. Keep under 150 words. Do not mention AI.`
 
-Rules:
-- Be calm and practical.
-- Focus on communication, routine, emotional support.
-- If severity is Moderate or Severe → encourage professional help gently.
-- Keep under 150 words.
-- Do not mention AI.
-- Do not give medical diagnosis.
-`
-
-    const response = await axios.post(
-      "http://localhost:11434/api/generate",
-      {
-        model: "phi",   // or mistral if stable
-        prompt: prompt,
-        stream: false
-      }
-    )
+    const response = await axios.post(OLLAMA_URL, {
+      model: MODEL,
+      prompt,
+      stream: false
+    })
 
     return response.data.response
 

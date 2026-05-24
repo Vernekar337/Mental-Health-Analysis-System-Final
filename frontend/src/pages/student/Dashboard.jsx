@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   LineChart,
   Line,
@@ -28,6 +28,8 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [insights, setInsights] = useState([])
   const [insightLoading, setInsightLoading] = useState(true)
+  const location = useLocation();
+const refreshKey = location.state?.refresh;
 
   useEffect(() => {
 
@@ -89,7 +91,7 @@ const StudentDashboard = () => {
 
     fetchInsights()
 
-  }, []);
+  }, [refreshKey]);
 
   if (loading) {
 

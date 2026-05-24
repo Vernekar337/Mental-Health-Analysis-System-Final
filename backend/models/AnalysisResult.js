@@ -9,10 +9,10 @@ const analysisResultSchema = new mongoose.Schema(
     },
 
     assessmentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Assessment",
-      required: true
-    },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "AssessmentResponse",
+  required: true
+},
 
     mhIndex: {
       type: Number,
@@ -37,7 +37,18 @@ const analysisResultSchema = new mongoose.Schema(
     anomalyDetected: {
       type: Boolean,
       required: true
-    }
+    },
+
+    // In backend/models/AnalysisResult.js — add after anomalyDetected field:
+severity: {
+  type: String,
+  default: null
+},
+
+trend: {
+  type: String,
+  default: "stable"
+},
   },
   { timestamps: true }
 )
